@@ -863,7 +863,8 @@ try{var __t=localStorage.getItem("langha_nen_v1");if(__t)document.documentElemen
   <div class="card">
     <h2>👷 Nhân sự — hồ sơ nhân viên</h2>
     <p class="hint">Tên, ngày tháng năm sinh, số điện thoại để bấm gọi. Có nút thêm / sửa / xoá nhân viên.
-      Hồ sơ và các lần giao nhập tay được lưu trên máy này (trình duyệt), không tự xoá khi tắt trang.</p>
+      Hồ sơ và các lần giao nhập tay <b>tự đồng bộ lên Firebase</b> — sửa ở máy nào, mở máy khác cũng giống hệt. Trên máy vẫn giữ 1 bản để dùng khi mất mạng.</p>
+    <div class="hint" id="ns-cloud">☁ Nhân sự: đang nối Firebase…</div>
     <div class="tools">
       <input type="search" id="ns-q" placeholder="🔍 Tìm nhân viên theo tên, SĐT…">
       <button class="btn" id="ns-add" type="button">＋ Thêm nhân viên</button>
@@ -4212,7 +4213,22 @@ window.docSoThanhChu = docSoThanhChu;
   var NS = load() || { emps: null, recs: [], rate: 6500 };
   if (!Array.isArray(NS.recs)) NS.recs = [];
   if (!NS.rate && NS.rate !== 0) NS.rate = 6500;
-  function save(){ _rowsCache = null; try { localStorage.setItem(LS, JSON.stringify(NS)); } catch(e){} }
+  function snapshotNS(){
+    try {
+      var prev = localStorage.getItem(LS);
+      if (!prev) return;
+      var arr = JSON.parse(localStorage.getItem("langha_nhansu_backups_v1") || "[]");
+      if (arr.length && arr[0].data === prev) return;
+      arr.unshift({ t: Date.now(), data: prev });
+      localStorage.setItem("langha_nhansu_backups_v1", JSON.stringify(arr.slice(0, 8)));
+    } catch(e){}
+  }
+  function save(){ _rowsCache = null; snapshotNS(); try { localStorage.setItem(LS, JSON.stringify(NS)); } catch(e){} nsCloudTouch(); }
+  function nsCloudTouch(){
+    if (window.__LH_NS_APPLYING) return;
+    try { localStorage.setItem("langha_nhansu_meta_v1", JSON.stringify({ t: Date.now() })); } catch(e){}
+    if (window.LH_NS_CLOUD_PUSH) window.LH_NS_CLOUD_PUSH();
+  }
   function pxArr(){ try { return (typeof PX !== "undefined" && PX) || []; } catch(e){ return []; } }
 
   if (!NS.emps){
@@ -4587,6 +4603,7 @@ window.docSoThanhChu = docSoThanhChu;
       NS.recs = Array.isArray(o.recs) ? o.recs : NS.recs;
       if (o.rate != null) NS.rate = o.rate;
       _rowsCache = null;
+      nsCloudTouch();
       renderAll();
     }
   };
@@ -4734,8 +4751,10 @@ window.docSoThanhChu = docSoThanhChu;
       '<button type="button" class="btn ghost" id="lh-edit-toggle" style="display:none">✏️ Bật chế độ sửa</button>' +
       '<button type="button" class="btn ghost" id="lh-changepw" style="display:none">🔑 Đổi mật khẩu</button>' +
       '<button type="button" class="btn ghost" id="lh-lock" style="display:none">🔒 Khoá lại</button>' +
+      '<button type="button" class="btn ghost" id="lh-bk-toggle">🕘 Sao lưu &amp; khôi phục</button>' +
     "</div>" +
-    '<div class="hint" id="lh-admin-state">👁 Đang ở chế độ xem.</div>';
+    '<div class="hint" id="lh-admin-state">👁 Đang ở chế độ xem.</div>' +
+    '<div id="lh-bk-panel" style="display:none;margin-top:10px"></div>';
   var homeEl = document.getElementById("lhHome");
   if (homeEl) mainEl.insertBefore(card, homeEl);
   else mainEl.insertBefore(card, mainEl.firstChild);
@@ -4750,7 +4769,7 @@ window.docSoThanhChu = docSoThanhChu;
   ov.id = "lh-pw-ov";
   ov.innerHTML =
     '<div class="lh-pw-box"><h3>🔐 Nhập mật khẩu</h3>' +
-    "<p>Khu vực Upload Excel và sửa dữ liệu cần mật khẩu quản trị.</p>" +
+    "<p>Khu vực Upload Excel và sửa dữ liệu cần mật khẩu quản trị. Cứ nhập — đúng mật khẩu là trang tự vào, không cần bấm nút.</p>" +
     '<input type="password" id="lh-pw-in" placeholder="Mật khẩu…" autocomplete="current-password">' +
     '<div class="lh-pw-acts"><button type="button" class="btn" id="lh-pw-ok">Mở khoá</button>' +
     '<button type="button" class="btn ghost" id="lh-pw-cancel">Huỷ</button></div>' +
@@ -4777,10 +4796,15 @@ window.docSoThanhChu = docSoThanhChu;
     ov.classList.add("on");
     setTimeout(function(){ $("#lh-pw-in").focus(); }, 60);
   }
-  async function tryUnlock(){
+  var checkingPw = false;
+  async function tryUnlock(silent){
     var v = $("#lh-pw-in").value || "";
-    if (!v){ $("#lh-pw-err").textContent = "Chưa nhập mật khẩu."; return; }
+    if (!v){ if (!silent) $("#lh-pw-err").textContent = "Chưa nhập mật khẩu."; return; }
+    if (checkingPw) return;
+    checkingPw = true;
     var h = await sha256(v);
+    checkingPw = false;
+    if (!ov.classList.contains("on")) return;
     if (h && h === storedHash()){
       try { sessionStorage.setItem("langha_unlocked", "1"); } catch(e){}
       ov.classList.remove("on");
@@ -4788,12 +4812,15 @@ window.docSoThanhChu = docSoThanhChu;
       if (typeof toast === "function") toast("🔓 Đã mở khoá.", "ok");
       var f = pendingAfterUnlock; pendingAfterUnlock = null;
       if (f) f();
-    } else {
+    } else if (!silent) {
       $("#lh-pw-err").textContent = "Sai mật khẩu, thử lại nhé.";
+    } else {
+      $("#lh-pw-err").textContent = "";
     }
   }
-  $("#lh-pw-ok").addEventListener("click", tryUnlock);
-  $("#lh-pw-in").addEventListener("keydown", function(e){ if (e.key === "Enter") tryUnlock(); });
+  $("#lh-pw-ok").addEventListener("click", function(){ tryUnlock(false); });
+  $("#lh-pw-in").addEventListener("keydown", function(e){ if (e.key === "Enter") tryUnlock(false); });
+  $("#lh-pw-in").addEventListener("input", function(){ tryUnlock(true); });
   $("#lh-pw-cancel").addEventListener("click", function(){ ov.classList.remove("on"); pendingAfterUnlock = null; });
   ov.addEventListener("click", function(e){ if (e.target === ov){ ov.classList.remove("on"); pendingAfterUnlock = null; } });
 
@@ -4825,9 +4852,15 @@ window.docSoThanhChu = docSoThanhChu;
   upIn.accept = ".xlsm,.xlsx";
   upIn.style.display = "none";
   document.body.appendChild(upIn);
+  var upWantsJson = false;
   upIn.addEventListener("change", function(){
-    if (upIn.files && upIn.files[0]) handleUpload(upIn.files[0]);
+    var f = upIn.files && upIn.files[0];
     upIn.value = "";
+    if (!f) return;
+    if (upWantsJson || /\.json$/i.test(f.name || "")) handleJsonRestore(f);
+    else handleUpload(f);
+    upWantsJson = false;
+    upIn.accept = ".xlsm,.xlsx";
   });
   function openUpload(){ upIn.click(); }
   var dlBtn = document.getElementById("lh-dl-top") || document.getElementById("lh-dl-xlsm");
@@ -4838,6 +4871,14 @@ window.docSoThanhChu = docSoThanhChu;
   });
   var pickBtn = document.getElementById("lh-pick-file");
   if (pickBtn) pickBtn.addEventListener("click", function(){ openUpload(); });
+  var bkBtn = document.getElementById("lh-bk-toggle");
+  if (bkBtn) bkBtn.addEventListener("click", function(){
+    var panel = document.getElementById("lh-bk-panel");
+    if (!panel) return;
+    var show = panel.style.display === "none";
+    panel.style.display = show ? "" : "none";
+    if (show) refreshBackups();
+  });
   refreshAdmin();
 
   /* ---------- 3) Upload Excel (.xlsm/.xlsx) & tự động đồng bộ ---------- */
@@ -5044,9 +5085,97 @@ window.docSoThanhChu = docSoThanhChu;
                        maDon: maDon, slBinh: slB, slVo: slV, tienCong: cong, donVi: dvi });
       recAdded++;
     });
+    nsSnapshotCurrent();
     try { localStorage.setItem(LS_NS, JSON.stringify(data)); } catch(e){}
     if (window.LH_NS_SYNC) window.LH_NS_SYNC();
     return { added: added, updated: updated, recAdded: recAdded, recSkip: recSkip };
+  }
+  function nsSnapshotCurrent(){
+    try {
+      var prev = localStorage.getItem(LS_NS);
+      if (!prev) return;
+      var arr = JSON.parse(localStorage.getItem("langha_nhansu_backups_v1") || "[]");
+      if (arr.length && arr[0].data === prev) return;
+      arr.unshift({ t: Date.now(), data: prev });
+      localStorage.setItem("langha_nhansu_backups_v1", JSON.stringify(arr.slice(0, 8)));
+    } catch(e){}
+  }
+  function fmtTime(t){
+    var d = new Date(t);
+    var pp = function(n){ return String(n).padStart(2, "0"); };
+    return pp(d.getDate()) + "/" + pp(d.getMonth() + 1) + "/" + d.getFullYear() + " " +
+           pp(d.getHours()) + ":" + pp(d.getMinutes()) + ":" + pp(d.getSeconds());
+  }
+  function refreshBackups(){
+    var panel = document.getElementById("lh-bk-panel");
+    if (!panel) return;
+    var arr = [];
+    try { arr = JSON.parse(localStorage.getItem("langha_nhansu_backups_v1") || "[]"); } catch(e){}
+    var html = '<div class="hint" style="margin-bottom:8px">🕘 <b>Lịch sử Nhân sự</b> — trang tự lưu 1 bản <b>trước</b> mỗi lần sửa hoặc upload (tối đa 8 bản gần nhất, lưu trên máy này). Khi khôi phục 1 bản cũ, bản hiện tại cũng được lưu lại để quay lui tiếp.</div>';
+    if (!arr.length) html += '<div class="hint">Chưa có bản sao lưu nào — cứ sửa nhân viên hoặc upload Excel là trang tự lưu.</div>';
+    else html += arr.map(function(b, i){
+      var o = null;
+      try { o = JSON.parse(b.data); } catch(e){}
+      var n = o && o.emps ? o.emps.length : 0, r = o && o.recs ? o.recs.length : 0;
+      return '<div class="ns-daybar" style="margin:0 0 8px"><b>' + fmtTime(b.t) + '</b> · ' + n +
+        ' nhân viên · ' + r + ' lần giao nhập tay &nbsp;<button type="button" class="btn ghost" data-lh-restore="' + i + '">↩ Khôi phục bản này</button></div>';
+    }).join("");
+    html += '<div class="tools">' +
+      '<button type="button" class="btn ghost" id="lh-bk-dl">⬇ Tải sao lưu .json (lưu ra ngoài máy)</button>' +
+      '<button type="button" class="btn ghost" id="lh-bk-json">⬆ Khôi phục từ file .json</button></div>';
+    panel.innerHTML = html;
+    panel.querySelectorAll("[data-lh-restore]").forEach(function(b){
+      b.addEventListener("click", function(){ restoreBackup(+b.getAttribute("data-lh-restore")); });
+    });
+    var dl = document.getElementById("lh-bk-dl");
+    if (dl) dl.addEventListener("click", downloadNSJson);
+    var jb = document.getElementById("lh-bk-json");
+    if (jb) jb.addEventListener("click", function(){
+      upWantsJson = true;
+      upIn.accept = ".json,application/json";
+      openUpload();
+    });
+  }
+  function restoreBackup(i){
+    try {
+      var arr = JSON.parse(localStorage.getItem("langha_nhansu_backups_v1") || "[]");
+      var bk = arr[i];
+      if (!bk) return;
+      if (typeof confirm === "function" &&
+          !confirm("Khôi phục dữ liệu Nhân sự về bản lưu lúc " + fmtTime(bk.t) + "?\n(Bản hiện tại cũng sẽ được lưu lại 1 bản để quay lui được.)")) return;
+      nsSnapshotCurrent();
+      localStorage.setItem(LS_NS, bk.data);
+      if (window.LH_NS_SYNC) window.LH_NS_SYNC();
+      refreshBackups();
+      if (typeof toast === "function") toast("↩ Đã khôi phục Nhân sự về bản lưu " + fmtTime(bk.t) + ".", "ok");
+    } catch(e){
+      if (typeof toast === "function") toast("Khôi phục lỗi: " + (e && e.message ? e.message : e), "bad");
+    }
+  }
+  function downloadNSJson(){
+    var blob = new Blob([JSON.stringify(nsData(), null, 2)], { type: "application/json" });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url;
+    a.download = "SaoLuu_NhanSu_LangHa.json";
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 4000);
+    if (typeof toast === "function") toast("⬇ Đã tải file sao lưu Nhân sự (.json). Hãy giữ file này ở nơi khác để phòng khi mất máy.", "ok");
+  }
+  async function handleJsonRestore(file){
+    try {
+      var o = JSON.parse(await file.text());
+      if (!o || !Array.isArray(o.emps)) throw new Error("File JSON không đúng định dạng sao lưu Nhân sự.");
+      nsSnapshotCurrent();
+      var data = { emps: o.emps, recs: Array.isArray(o.recs) ? o.recs : [], rate: o.rate != null ? o.rate : 6500 };
+      try { localStorage.setItem(LS_NS, JSON.stringify(data)); } catch(e){}
+      if (window.LH_NS_SYNC) window.LH_NS_SYNC();
+      refreshBackups();
+      if (typeof toast === "function")
+        toast("✅ Đã khôi phục Nhân sự từ file sao lưu (" + data.emps.length + " nhân viên, " + data.recs.length + " lần giao nhập tay).", "ok");
+    } catch(e){
+      if (typeof toast === "function") toast("Không khôi phục được: " + (e && e.message ? e.message : e), "bad");
+    }
   }
   async function handleUpload(file){
     try {
@@ -5074,5 +5203,98 @@ window.docSoThanhChu = docSoThanhChu;
 })();
 
 </script>
-<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a4a155b0cea709c0',t:'MTc5MTkyNTg2NQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script id="lh-nscloud-js">
+/* ===== ĐỒNG BỘ NHÂN SỰ LÊN FIREBASE =====
+   Doc "nhansu:main" trong collection langha_data, dạng {json, t, dev}.
+   Thêm/sửa/xoá nhân viên, lần giao nhập tay, upload Excel hay khôi phục
+   đều tự đẩy lên; máy khác đang mở trang tự nhận và vẽ lại — mọi máy giống nhau.
+   Khi 2 máy sửa lệch nhau: lấy bản có thời gian sửa mới nhất. */
+(function(){
+  "use strict";
+  var LS = "langha_nhansu_v1";
+  var META = "langha_nhansu_meta_v1";
+  var DOC = "nhansu:main";
+  var shadow = null, started = false, pushTimer = null;
+
+  function $(s){ return document.querySelector(s); }
+  function localJson(){ try { return localStorage.getItem(LS); } catch(e){ return null; } }
+  function metaT(){ try { var o = JSON.parse(localStorage.getItem(META) || "null"); return (o && +o.t) || 0; } catch(e){ return 0; } }
+  function setStatus(txt){ var el = $("#ns-cloud"); if (el) el.textContent = txt; }
+  function timeTxt(t){ var d = new Date(t); var p = function(n){ return String(n).padStart(2, "0"); };
+    return p(d.getHours()) + ":" + p(d.getMinutes()) + ":" + p(d.getSeconds()) + " " + p(d.getDate()) + "/" + p(d.getMonth() + 1); }
+  function devName(){ try { return (typeof deviceName === "function") ? deviceName() : ""; } catch(e){ return ""; } }
+  function colRef(){
+    if (typeof cfDb !== "function" || typeof COL === "undefined") return null;
+    var db = cfDb(); if (!db) return null;
+    return db.collection(COL).doc(DOC);
+  }
+
+  function doPush(){
+    var ref = colRef();
+    if (!ref){ setStatus("☁ Nhân sự: chưa nối được Firebase — đang lưu trên máy này, có mạng là tự đồng bộ tiếp."); return; }
+    var j = localJson(); if (!j) return;
+    if (shadow !== null && j === shadow){ setStatus("☁ Nhân sự: ✅ đã khớp Firebase (mọi máy giống nhau)"); return; }
+    var t = Date.now();
+    setStatus("☁ Nhân sự: ⬆ đang đẩy lên Firebase…");
+    ref.set({ json: j, t: t, dev: devName() }).then(function(){
+      shadow = j;
+      setStatus("☁ Nhân sự: ✅ đã đồng bộ Firebase lúc " + timeTxt(t) + " — máy nào mở trang cũng giống hệt.");
+    }).catch(function(e){
+      var m = (typeof cfErr === "function") ? cfErr(e) : String((e && e.message) || e);
+      setStatus("☁ Nhân sự: ⚠ chưa đẩy được lên Firebase (" + m + ") — dữ liệu vẫn an toàn trên máy này.");
+    });
+  }
+  window.LH_NS_CLOUD_PUSH = function(){
+    if (pushTimer) clearTimeout(pushTimer);
+    pushTimer = setTimeout(doPush, 350);
+  };
+
+  function applyRemote(j, t){
+    shadow = j;
+    window.__LH_NS_APPLYING = true;
+    try {
+      localStorage.setItem(LS, j);
+      localStorage.setItem(META, JSON.stringify({ t: t }));
+    } catch(e){}
+    if (window.LH_NS_SYNC) window.LH_NS_SYNC();
+    window.__LH_NS_APPLYING = false;
+    setStatus("☁ Nhân sự: ⬇ vừa nhận dữ liệu mới từ máy khác (" + timeTxt(t) + ") — đã khớp Firebase.");
+    if (typeof toast === "function") toast("☁ Đã nhận dữ liệu Nhân sự mới từ Firebase (máy khác vừa sửa).", "ok");
+  }
+
+  function onDoc(snap){
+    if (!snap || !snap.exists){
+      if (localJson()) window.LH_NS_CLOUD_PUSH();
+      return;
+    }
+    var d = snap.data() || {};
+    var j = (typeof d.json === "string") ? d.json : "";
+    var t = +d.t || 0;
+    if (!j) return;
+    if (j === localJson()){ shadow = j; setStatus("☁ Nhân sự: ✅ đã khớp Firebase (mọi máy giống nhau)"); return; }
+    if (t >= metaT()) applyRemote(j, t);
+    else window.LH_NS_CLOUD_PUSH();
+  }
+
+  function start(tries){
+    if (started) return;
+    var ref = null;
+    try { ref = colRef(); } catch(e){}
+    if (!ref){
+      setStatus("☁ Nhân sự: đang nối Firebase…");
+      if ((tries || 0) < 12) setTimeout(function(){ start((tries || 0) + 1); }, 1500);
+      else setStatus("☁ Nhân sự: ⚠ chưa nối được Firebase — đang lưu trên máy này, có mạng là tự đồng bộ.");
+      return;
+    }
+    started = true;
+    ref.onSnapshot(function(snap){ onDoc(snap); }, function(e){
+      var m = (typeof cfErr === "function") ? cfErr(e) : String((e && e.message) || e);
+      setStatus("☁ Nhân sự: ⚠ mất kênh Firebase (" + m + ") — vẫn sửa được trên máy này.");
+    });
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", function(){ start(0); });
+  else start(0);
+})();
+</script>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a4a1643caa51f995',t:'MTc5MTkyNjQ2MA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
