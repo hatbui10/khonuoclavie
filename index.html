@@ -627,6 +627,27 @@
             }
             .ns-grp td{background:rgba(77,141,255,.12);font-size:13px}
             tr.ns-grp[data-ns-mrow]{cursor:pointer}
+            #ns-tbl td.ns-date{vertical-align:top;font-weight:700;background:rgba(77,141,255,.08)}
+            #ns-tbl .ns-date-in{position:sticky;top:42px;display:inline-block}
+            @media (max-width:720px){#ns-tbl .ns-date-in{top:140px}}
+            .gh-tools{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;margin:10px 0 4px}
+            .gh-lb{display:flex;flex-direction:column;gap:4px;font-size:11px;font-weight:700;color:var(--ink-2)}
+            .gh-lb input,.gh-lb select{min-height:36px}
+            .gh-tw{overflow:auto;max-height:68vh}
+            .gh-tbl{width:100%;min-width:920px;border-collapse:collapse;font-size:13px}
+            .gh-tbl th,.gh-tbl td{border-bottom:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:middle}
+            .gh-tbl td.num,.gh-tbl th.num{text-align:right}
+            .gh-in{width:88px;padding:6px 8px}
+            .gh-in.gh-thu{width:118px}
+            .gh-nvsel{min-width:74px;padding:6px}
+            .gh-no{color:#fbbf24;font-weight:800;white-space:nowrap;text-align:right}
+            .gh-sub{font-size:11px;color:var(--ink-2)}
+            .gh-hang{font-size:12px;max-width:230px}
+            .gh-badge{font-size:10.5px;padding:2px 7px;border-radius:99px;border:1px solid var(--line);white-space:nowrap}
+            .gh-badge.new{border-color:rgba(46,160,90,.6);color:#7ee2a8}
+            .gh-badge.edt{border-color:rgba(250,204,21,.6);color:#fde68a}
+            .gh-acts{white-space:nowrap}
+            .gh-acts .btn{padding:5px 9px;font-size:12px}
         </style>
     </head>
 
@@ -683,6 +704,7 @@
                         Phiếu xuất T9
                     </button>
                     <button data-tab="nhansu" id="ns-tab-btn">👷 Nhân sự</button>
+                    <button data-tab="giao" id="gh-tab-btn">📦 Lịch sử giao hàng</button>
                 </nav>
             </div>
         </header>
@@ -978,8 +1000,8 @@
                 </div>
 
                 <div class="card" id="ns-card-cong">
-                    <h2>🧮 Bảng công & lương</h2>
-                    <p class="hint">Tự rút từ <b>Phiếu xuất T9</b>: mỗi phiếu là 1 đơn — ngày, mã đơn, số bình giao, số vỏ lấy về. Tiền công lấy theo <b>hồ sơ từng nhân viên</b> (mặc định <b>6.500đ/bình</b> như VBA <i>TinhLuong</i>). Bảng dưới đây đã <b>gộp làm một</b>: mỗi nhân viên một nhóm — dòng đầu nhóm là <b>tổng tháng</b> của nhân viên đó, các dòng dưới là từng đơn giao trong <b>Tháng xem</b>. Cứ đổi <b>Nhân viên / Tháng xem / Ngày xem</b> ở thanh lọc trên cùng của tab là thẻ nhân viên, dòng tổng ngày và bảng này tự thay đổi theo.</p>
+                    <h2 id="ns-cong-title">🧮 Bảng công & lương</h2>
+                    <p class="hint">Tự rút từ <b>Phiếu xuất T9</b>: mỗi phiếu là 1 đơn — ngày, mã đơn, số bình giao, số vỏ lấy về. Tiền công lấy theo <b>hồ sơ từng nhân viên</b> (mặc định <b>6.500đ/bình</b> như VBA <i>TinhLuong</i>). Bảng dưới đây đã <b>gộp làm một</b>: mỗi nhân viên một nhóm — dòng đầu nhóm là <b>tổng tháng</b> của nhân viên đó, các dòng dưới là từng đơn giao trong <b>Tháng xem</b>. Cứ đổi <b>Nhân viên / Tháng xem / Ngày xem</b> ở thanh lọc trên cùng của tab là thẻ nhân viên, dòng tổng ngày và bảng này tự thay đổi theo. Chọn <b>Ngày xem</b> thì bảng liệt kê từng đơn của ngày đó, chọn <b>Tháng xem</b> thì liệt kê cả tháng — cột <b>Ngày</b> đã gộp thành 1 ô cho mỗi ngày trong nhóm nhân viên.</p>
                     <div class="ns-form" id="ns-rform">
                         <h3>Thêm lần giao (nhập tay)</h3>
                         <div class="ns-grid">
@@ -1039,6 +1061,47 @@
                     </div>
                 </div>
 
+            </section>
+
+            <!-- ================= LỊCH SỬ GIAO HÀNG ================= -->
+            <section class="tab" id="tab-giao">
+                <div class="card">
+                    <h2>📦 Lịch sử giao hàng</h2>
+                    <p class="hint">Mỗi dòng là <b>1 phiếu giao</b>. Khi nhân viên mang vỏ về, điền <b>Vỏ thu về · Vỏ đặt cọc / trả cọc · Đã thu tiền · NV giao</b> ngay tại đây rồi bấm <b>💾 Lưu</b> — hoặc bấm <b>🖨 In phiếu giao hàng</b> là máy <b>tự lưu số liệu rồi mới in</b>. Lưu xong, số liệu cập nhật ngay sang: tab <b>Phiếu xuất</b> · <b>Nhân sự</b> (vỏ lấy về &amp; tiền công theo NV giao) · <b>nợ tiền / nợ vỏ của khách</b> · <b>Tổng quan</b>.</p>
+                    <div class="gh-tools">
+                        <label class="gh-lb">🔎 Tìm phiếu / khách<input id="gh-q" type="search" placeholder="Mã phiếu, tên khách, mã KH, SĐT…"></label>
+                        <label class="gh-lb">👤 NV giao<select id="gh-f-nv">
+                                <option value="">Tất cả NV</option>
+                            </select></label>
+                        <label class="gh-lb">📅 Tháng giao<select id="gh-f-thang">
+                                <option value="">Tất cả tháng</option>
+                            </select></label>
+                        <button type="button" class="btn ghost" id="gh-reload">⟳ Làm mới</button>
+                        <span class="hint" id="gh-lock"></span>
+                    </div>
+                    <p class="hint" id="gh-sum"></p>
+                    <div class="tw gh-tw">
+                        <table class="gh-tbl">
+                            <thead>
+                                <tr>
+                                    <th>Ngày</th>
+                                    <th>Mã phiếu</th>
+                                    <th>Khách hàng</th>
+                                    <th>Hàng giao</th>
+                                    <th class="num">SL giao</th>
+                                    <th class="num">Vỏ thu về (bình)</th>
+                                    <th class="num">Vỏ đặt cọc / trả cọc</th>
+                                    <th class="num">Đã thu tiền (đ)</th>
+                                    <th class="num">Nợ tiền (đ)</th>
+                                    <th>NV giao</th>
+                                    <th>Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody id="gh-tbody"></tbody>
+                        </table>
+                    </div>
+                    <p class="hint" id="gh-note"></p>
+                </div>
             </section>
 
             <!-- ================= INFO ================= -->
@@ -2414,6 +2477,7 @@
                 voThu:+r[12]||0, noTien:+r[13]||0, nv:r[14], dia:r[15], sdt:r[16], _tel: telsOf(r[16]),
                 tien:(+r[9]||0)*(+r[10]||0), _new:false,
                 _s: norm([r[0],r[1],r[2],r[3],r[4],r[5],r[6],r[7],r[14],r[15],r[16]].join(" "))}));
+              if (window.LH_GH_APPLY) window.LH_GH_APPLY(rows);   /* patch27: so dien o tab Lich su giao hang cho phieu goc */
               ORD.forEach(o => {
                 o.items.forEach((it, i) => {
                   rows.push({
@@ -2742,7 +2806,7 @@
               o.applied = orderSnap(isNew ? o : old);
               saveOrders(); bumpRev(); saveEdit();
               recomputeStats(); buildDash(); buildKhFilters(); renderKh();
-              buildPXView(); buildPx(); renderPx();
+              buildPXView(); buildPx(); renderPx(); if (window.LH_GH_SYNC) window.LH_GH_SYNC();
               updateDirty(); updateCloud();
               closeModal();
             }
@@ -2762,7 +2826,7 @@
               addLog("Xoá đơn " + o.px, o.maKH, o.tenKH);
               saveOrders(); bumpRev(); saveEdit();
               recomputeStats(); buildDash(); buildKhFilters(); renderKh();
-              buildPXView(); buildPx(); renderPx(); updateDirty(); updateCloud(); closeModal();
+              buildPXView(); buildPx(); renderPx(); if (window.LH_GH_SYNC) window.LH_GH_SYNC(); updateDirty(); updateCloud(); closeModal();
               toast("Đã xoá đơn " + o.px + " và hoàn lại công nợ", "bad");
             }
             
@@ -4324,13 +4388,24 @@
                 nsMode = m;
                 var ce = $("#ns-card-emp"), cc = $("#ns-card-cong");
                 if (ce) ce.style.display = (m === "month") ? "none" : "";
-                if (cc) cc.style.display = (m === "month") ? "" : "none";
+                if (cc) cc.style.display = "";
+                var ct = $("#ns-cong-title");
+                if (ct) ct.textContent = (m === "month") ? "🧮 Bảng công & lương tháng" : "📋 Chi tiết giao hàng theo ngày";
                 var lt = $("#ns-lb-thang"), ln = $("#ns-lb-ngay");
                 if (lt) lt.classList.toggle("ns-dim", m === "day");
                 if (ln) ln.classList.toggle("ns-dim", m === "month");
                 ["#ns-d-today", "#ns-d-latest", "#ns-day-sum"].forEach(function(sel){
                   var b = $(sel);
                   if (b) b.classList.toggle("ns-dim", m === "month");
+                });
+              }
+              /* cham vao BAT KY cho nao trong o Thang xem / Ngay xem (nhan, vien, o chon...)
+                 la chuyen che do ngay lap tuc — khong can doi gia tri moi mo */
+              function bindNsModeTap(){
+                var lt = $("#ns-lb-thang"), ln = $("#ns-lb-ngay");
+                ["pointerdown", "click"].forEach(function(ev){
+                  if (lt) lt.addEventListener(ev, function(){ setNsMode("month"); });
+                  if (ln) ln.addEventListener(ev, function(){ setNsMode("day"); });
                 });
               }
               function selectEmp(id){
@@ -4590,11 +4665,19 @@
                   var da = parseDate(a.ngay), db = parseDate(b.ngay);
                   return (db ? db.getTime() : 0) - (da ? da.getTime() : 0);
                 });
+                var dayMode = (typeof nsMode !== "undefined" && nsMode === "day");
+                var dk2 = viewDayKey();
+                if (dayMode) rows = rows.filter(function(r){ return dayKey(r.ngay) === dk2; });
                 var tB = rows.reduce(function(a, r){ return a + r.slBinh; }, 0);
                 var tV = rows.reduce(function(a, r){ return a + r.slVo; }, 0);
                 var tT = rows.reduce(function(a, r){ return a + r.tong; }, 0);
                 var eSel = fNv ? empById(fNv) : null;
-                $("#ns-sum").innerHTML = eSel
+                if (dayMode) {
+                  $("#ns-sum").innerHTML = "📅 <b>Chi tiết ngày " + escHtml(fmtDate(dk2)) + "</b>" + (eSel ? " của <b>" + escHtml(eSel.ten || eSel.ma || "") + "</b>" : "") +
+                    " · gộp theo từng nhân viên: <b>" + fmtNum(rows.length) + "</b> đơn · 🛢 <b>" + fmtNum(tB) + "</b> bình giao · ↩ <b>" + fmtNum(tV) +
+                    "</b> vỏ lấy về · 💰 Tiền công ngày <span class=\"ns-grp-pay\">" + fmtMoney(tT) + "</span>" +
+                    ' <span class="dim">(mỗi nhóm là 1 nhân viên: dòng đầu nhóm là tổng ngày, bên dưới là từng đơn; cột Ngày đã gộp thành 1 ô cho mỗi ngày)</span>';
+                } else $("#ns-sum").innerHTML = eSel
                   ? '<div class="ns-bigpay"><div><div class="ns-bigpay-lb">💰 Tổng lương tháng ' + (fTh ? fTh.slice(5) + "/" + fTh.slice(0, 4) : "—") + " · " + escHtml(eSel.ten || eSel.ma || "") + '</div>' +
                     '<div class="ns-bigpay-sub">' + fmtNum(rows.length) + " đơn · 🛢 " + fmtNum(tB) + " bình giao · ↩ " + fmtNum(tV) + " vỏ lấy về trong tháng</div></div>" +
                     '<div class="ns-salary-box">' + fmtMoney(tT) + "</div></div>"
@@ -4619,23 +4702,30 @@
                 tb.innerHTML = gkeys.map(function(k){
                   var g = groups[k];
                   var head = eSel
-                    ? '<tr class="ns-grp"><td colspan="10">📋 Chi tiết từng đơn giao trong tháng của <b>' + escHtml(g.ten) + '</b></td></tr>'
+                    ? '<tr class="ns-grp"><td colspan="10">📋 Chi tiết từng đơn giao ' + (dayMode ? "ngày " + escHtml(fmtDate(dk2)) : "trong tháng") + ' của <b>' + escHtml(g.ten) + '</b></td></tr>'
                     : '<tr class="ns-grp"' + (g.id ? ' data-ns-mrow="' + g.id + '" title="Bấm để chỉ xem nhân viên này"' : "") + '><td colspan="10">👤 <b>' + escHtml(g.ten) + '</b> · ' +
                       fmtNum(g.don) + ' đơn · 🛢 ' + fmtNum(g.binh) + ' bình giao · ↩ ' + fmtNum(g.vo) + ' vỏ lấy về · 💰 <span class="ns-grp-pay">' + fmtMoney(g.tien) + '</span></td></tr>';
-                  var body = g.rows.map(function(r){
-                    if (shown >= 500) return '';
-                    shown++;
-                    return '<tr><td class="nowrap">' + escHtml(fmtDate(r.ngay)) + '</td>' +
-                      '<td class="mono">' + escHtml(r.maDon) + '</td>' +
-                      '<td>' + escHtml(r.nvTen) + '</td>' +
-                      '<td class="num">' + fmtNum(r.slBinh) + '</td>' +
-                      '<td class="num">' + fmtNum(r.slVo) + '</td>' +
-                      '<td class="num">' + fmtNum(r.tienCong) + '</td>' +
-                      '<td>' + escHtml(r.donVi) + '</td>' +
-                      '<td class="num"><b>' + fmtNum(r.tong) + '</b></td>' +
-                      '<td>' + (r.src === 'px' ? '<span class="ns-badge">Phiếu xuất</span>' : '<span class="ns-badge man">Nhập tay</span>') + '</td>' +
-                      '<td>' + (r.src === 'man' ? '<button type="button" class="btn ghost" data-ns-delrec="' + r.id + '">🗑</button>' : '') + '</td></tr>';
-                  }).join('');
+                  var grows = g.rows.slice(0, Math.max(0, 500 - shown));
+                  shown += grows.length;
+                  var body = "", ri = 0;
+                  while (ri < grows.length){
+                    var rj = ri + 1;
+                    while (rj < grows.length && fmtDate(grows[rj].ngay) === fmtDate(grows[ri].ngay)) rj++;
+                    for (var k2 = ri; k2 < rj; k2++){
+                      var r = grows[k2];
+                      body += '<tr>' + (k2 === ri ? '<td class="nowrap ns-date" rowspan="' + (rj - ri) + '"><span class="ns-date-in">' + escHtml(fmtDate(r.ngay)) + '</span></td>' : '') +
+                        '<td class="mono">' + escHtml(r.maDon) + '</td>' +
+                        '<td>' + escHtml(r.nvTen) + '</td>' +
+                        '<td class="num">' + fmtNum(r.slBinh) + '</td>' +
+                        '<td class="num">' + fmtNum(r.slVo) + '</td>' +
+                        '<td class="num">' + fmtNum(r.tienCong) + '</td>' +
+                        '<td>' + escHtml(r.donVi) + '</td>' +
+                        '<td class="num"><b>' + fmtNum(r.tong) + '</b></td>' +
+                        '<td>' + (r.src === 'px' ? '<span class="ns-badge">Phiếu xuất</span>' : '<span class="ns-badge man">Nhập tay</span>') + '</td>' +
+                        '<td>' + (r.src === 'man' ? '<button type="button" class="btn ghost" data-ns-delrec="' + r.id + '">🗑</button>' : '') + '</td></tr>';
+                    }
+                    ri = rj;
+                  }
                   return head + body;
                 }).join('');
                 tb.querySelectorAll('[data-ns-delrec]').forEach(function(b){
@@ -4748,6 +4838,7 @@
               });
               $("#ns-f-nv").addEventListener("change", renderAll);
               $("#ns-f-thang").addEventListener("change", function(){ setNsMode("month"); renderAll(); });
+              bindNsModeTap();
               var fDateEl = $("#ns-f-date");
               if (fDateEl) fDateEl.addEventListener("change", renderRecs);
               var rNvEl = $("#ns-r-nv");
@@ -5606,8 +5697,289 @@
               else start(0);
             })();
         </script>
+        <script id="lh-giao-js">
+            /* ===== patch27: tab Lich su giao hang — dien vo thu ve / coc / da thu / NV giao,
+               bam In phieu giao hang la tu luu roi in; so lieu cap nhat ngay sang Phieu xuat,
+               Nhan su, cong no khach va Tong quan. Phieu moi sua truc tiep tren don hang;
+               phieu goc (so SALE) luu lop de langha_giao_edit_v1 va ap vao PX khi dung lai bang. ===== */
+            (function(){
+              "use strict";
+              var LS_GH = "langha_giao_edit_v1";
+              var GH = {};
+              try { GH = JSON.parse(localStorage.getItem(LS_GH) || "{}") || {}; } catch(e){ GH = {}; }
+              var $ = function(s){ return document.querySelector(s); };
+              function num(v){ return Math.max(0, +v || 0); }
+              function escH(x){ return (typeof esc === "function") ? esc(x) : String(x == null ? "" : x); }
+              function nfN(x){ return (typeof nf === "function") ? nf(+x || 0) : String(+x || 0); }
+              function vndN(x){ return (typeof vnd === "function") ? vnd(+x || 0) : nfN(x) + " đ"; }
+              function normS(x){ return (typeof norm === "function") ? norm(x) : String(x || "").toLowerCase(); }
+              function saveGhLS(){ try { localStorage.setItem(LS_GH, JSON.stringify(GH)); } catch(e){} }
+              function pxAll(){ try { return (typeof PX !== "undefined" && PX) || []; } catch(e){ return []; } }
+              function ordAll(){ try { return (typeof ORD !== "undefined" && ORD) || []; } catch(e){ return []; } }
+              function khAll(){ try { return (typeof KH !== "undefined" && KH) || []; } catch(e){ return []; } }
+              function ghOrder(oid){ return ordAll().find(function(o){ return o._id === oid; }) || null; }
+              function ghUnlocked(){ try { return (typeof isUnlocked === "function") ? !!isUnlocked() : true; } catch(e){ return true; } }
+              function ghGate(go){
+                if (ghUnlocked()) { go(); return; }
+                if (typeof askPassword === "function") askPassword(go); else go();
+              }
+            
+              /* ap so da dien cho phieu goc vao cac dong PX vua dung tu SALE (buildPXView goi) */
+              window.LH_GH_APPLY = function(rows){
+                rows.forEach(function(r){
+                  var e = GH[r.px]; if (!e) return;
+                  var baseThu = +r.ttSheet || 0, baseNo = +r.noTien || 0;
+                  r.voThu = num(e.voThu);
+                  if (e.nv) r.nv = e.nv;
+                  r.ttSheet = num(e.daThu);
+                  r.noTien = Math.max(0, baseNo - (num(e.daThu) - baseThu));
+                  r.voTraGh = num(e.voTra);
+                  r.daThuGh = num(e.daThu);
+                  r._ghEdit = true;
+                });
+              };
+            
+              function dkey(s){ var p = String(s || "").split("/"); return (+p[2] || 0) * 10000 + (+p[1] || 0) * 100 + (+p[0] || 0); }
+              function ghGroups(){
+                var map = {}, keys = [];
+                pxAll().forEach(function(r){
+                  var k = r.px || "(không mã)";
+                  if (!map[k]) { map[k] = { px: k, rows: [], oid: "", isNew: false }; keys.push(k); }
+                  map[k].rows.push(r);
+                  if (r._new) { map[k].isNew = true; map[k].oid = r._oid; }
+                });
+                var out = keys.map(function(k){
+                  var g = map[k], r0 = g.rows[0];
+                  var sl = g.rows.reduce(function(a, r){ return a + (+r.sl || 0); }, 0);
+                  var tien = g.rows.reduce(function(a, r){ return a + (+r.tien || 0); }, 0);
+                  var base = { px: g.px, isNew: g.isNew, oid: g.oid, rows: g.rows, ngay: r0.ngay || "",
+                    maKH: r0.maKH || "", tenKH: r0.tenKH || "", nhom: r0.nhom || "", kho: r0.kho || "",
+                    dia: r0.dia || "", sdt: r0.sdt || "", sl: sl, tien: tien,
+                    hangTxt: g.rows.map(function(r){ return (r.hangFull || r.hang || "") + (r.sl ? " ×" + r.sl : ""); }).join("; ") };
+                  if (g.isNew) {
+                    var o = ghOrder(g.oid) || {};
+                    base.voThu = num(o.voThu); base.voTra = num(o.voTra); base.daThu = num(o.daThu);
+                    base.nv = ghCanonNv(o.nv || r0.nv || ""); base.noTien = Math.max(0, tien - base.daThu); base.order = o; base.edited = false;
+                  } else {
+                    base.voThu = num(r0.voThu); base.voTra = num(r0.voTraGh);
+                    base.daThu = (r0.daThuGh != null ? num(r0.daThuGh) : num(r0.ttSheet));
+                    base.nv = ghCanonNv(r0.nv || ""); base.noTien = num(r0.noTien); base.edited = !!r0._ghEdit;
+                  }
+                  return base;
+                });
+                out.sort(function(a, b){ return dkey(b.ngay) - dkey(a.ngay) || (a.px < b.px ? 1 : -1); });
+                return out;
+              }
+            
+              var NV_ALL = [], EMP_BY_CODE = {};
+              function ghEmps(){
+                try {
+                  var o = JSON.parse(localStorage.getItem("langha_nhansu_v1") || "null");
+                  return (o && Array.isArray(o.emps)) ? o.emps : [];
+                } catch(e){ return []; }
+              }
+              function ghCanonNv(x){ return String(x || "").trim().toUpperCase(); }
+              function ghNvName(x){ var c = ghCanonNv(x); return EMP_BY_CODE[c] || c || ""; }
+              function buildNvAll(){
+                EMP_BY_CODE = {};
+                ghEmps().forEach(function(e){
+                  var code = ghCanonNv(e.maGoc || e.ma || "");
+                  if (code && !EMP_BY_CODE[code]) EMP_BY_CODE[code] = String(e.ten || code);
+                });
+                var seen = {}, out = [];
+                Object.keys(EMP_BY_CODE).forEach(function(code){ seen[code] = 1; out.push({ code: code, label: EMP_BY_CODE[code] }); });
+                var src = (typeof NV_LIST !== "undefined" && NV_LIST) ? NV_LIST.slice() : [];
+                pxAll().forEach(function(r){ if (r.nv) src.push(r.nv); });
+                src.forEach(function(x){
+                  var code = ghCanonNv(x);
+                  if (code && !seen[code]) { seen[code] = 1; out.push({ code: code, label: code }); }
+                });
+                NV_ALL = out;
+              }
+            
+              function refreshAll(){
+                try { recomputeStats(); buildDash(); } catch(e){}
+                try { buildKhFilters(); renderKh(); } catch(e){}
+                try { buildPXView(); buildPx(); renderPx(); } catch(e){}
+                try { updateDirty(); updateCloud(); } catch(e){}
+                if (window.LH_NS_SYNC) { try { window.LH_NS_SYNC(); } catch(e){} }
+                renderGh();
+              }
+            
+              function ghRead(px){
+                function v(attr){ var el = document.querySelector('[data-gh-' + attr + '="' + px + '"]'); return el ? el.value : ""; }
+                return { voThu: num(v("vo")), voTra: num(v("coc")), daThu: num(v("thu")), nv: v("nv") || "" };
+              }
+              function ghDirty(g, vals){
+                return vals.voThu !== g.voThu || vals.voTra !== g.voTra || vals.daThu !== g.daThu || String(vals.nv) !== String(g.nv);
+              }
+            
+              function ghSavePx(g, vals){
+                GH[g.px] = { voThu: vals.voThu, voTra: vals.voTra, daThu: vals.daThu, nv: vals.nv, t: Date.now() };
+                saveGhLS();
+                var ms = khAll().filter(function(c){ return c.ma === g.maKH; });
+                if (ms.length === 1 && typeof EDIT !== "undefined") {
+                  var c = ms[0];
+                  var dVo = (vals.voThu + vals.voTra) - (g.voThu + g.voTra);
+                  var dThu = vals.daThu - g.daThu;
+                  if (dVo || dThu) {
+                    c.noV = Math.max(0, (c.noV || 0) - dVo);
+                    c.noT = Math.max(0, (c.noT || 0) - dThu);
+                    EDIT.ups[c._id] = { v: { ma: c.ma, nhom: c.nhom, kho: c.kho, ten: c.ten, dia: c.dia, sdt: c.sdt, ghic: c.ghic, noT: c.noT, noV: c.noV }, t: Date.now() };
+                  }
+                }
+                try { bumpRev(); saveEdit(); } catch(e){}
+                refreshAll();
+                if (typeof toast === "function") toast("✓ Đã lưu phiếu " + g.px + " — vỏ thu về " + nfN(vals.voThu) + " · đã thu " + vndN(vals.daThu), "ok");
+              }
+              function ghSaveOrder(g, vals){
+                var o = g.order || ghOrder(g.oid); if (!o) return;
+                try { applyOrder(o, -1); } catch(e){}
+                o.voThu = vals.voThu; o.voTra = vals.voTra; o.daThu = vals.daThu; o.nv = vals.nv;
+                o.t = Date.now();
+                try { o.dev = deviceName(); } catch(e){}
+                try { o.applied = orderSnap(o); applyOrder(o, +1); } catch(e){}
+                try { saveOrders(); bumpRev(); saveEdit(); } catch(e){}
+                refreshAll();
+                if (typeof toast === "function") toast("✓ Đã lưu phiếu " + g.px + " — vỏ thu về " + nfN(vals.voThu) + " · đã thu " + vndN(vals.daThu), "ok");
+              }
+              function ghPrint(px){
+                var g = ghGroups().find(function(x){ return x.px === px; }); if (!g) return;
+                var o;
+                if (g.isNew) { o = g.order || ghOrder(g.oid); }
+                else {
+                  o = { px: g.px, ngay: g.ngay, maKH: g.maKH, tenKH: g.tenKH, nhom: g.nhom, kho: g.kho,
+                        nv: g.nv, dia: g.dia, sdt: g.sdt, ghi: "", voThu: g.voThu, voTra: g.voTra,
+                        daThu: g.daThu, updDept: false,
+                        items: g.rows.map(function(r){ return { hang: r.hang, hangFull: r.hangFull, dvi: r.dvi, sl: r.sl, gia: r.gia }; }) };
+                }
+                if (o && typeof inPhieu === "function") inPhieu(o);
+              }
+              function ghSave(px, thenPrint){
+                var g = ghGroups().find(function(x){ return x.px === px; }); if (!g) return;
+                var vals = ghRead(px);
+                var dirty = ghDirty(g, vals);
+                function go(){
+                  if (dirty) { if (g.isNew) ghSaveOrder(g, vals); else ghSavePx(g, vals); }
+                  if (thenPrint) ghPrint(px);
+                }
+                if (dirty) ghGate(go); else if (thenPrint) ghPrint(px);
+              }
+            
+              function ghRowHtml(g){
+                var dis = ghUnlocked() ? "" : " disabled";
+                var nvOpts = NV_ALL.map(function(x){ return '<option value="' + escH(x.code) + '"' + (String(g.nv) === String(x.code) ? " selected" : "") + '>' + escH(x.label) + '</option>'; }).join("");
+                if (g.nv && !NV_ALL.some(function(x){ return String(x.code) === String(g.nv); })) nvOpts = '<option value="' + escH(g.nv) + '" selected>' + escH(ghNvName(g.nv)) + '</option>' + nvOpts;
+                var badge = g.isNew ? '<span class="gh-badge new">Đơn mới</span>' : (g.edited ? '<span class="gh-badge edt">Đã sửa tại đây</span>' : '<span class="gh-badge">Sổ gốc</span>');
+                return '<tr>' +
+                  '<td class="nowrap">' + escH(g.ngay) + '</td>' +
+                  '<td class="mono"><b>' + escH(g.px) + '</b><br>' + badge + '</td>' +
+                  '<td><b>' + escH(g.tenKH) + '</b><br><span class="gh-sub">' + escH(g.maKH) + (g.sdt ? ' · ' + escH(g.sdt) : '') + '</span></td>' +
+                  '<td class="gh-hang">' + escH(g.hangTxt) + '</td>' +
+                  '<td class="num"><b>' + nfN(g.sl) + '</b></td>' +
+                  '<td><input class="gh-in" type="number" min="0" data-gh-vo="' + escH(g.px) + '" value="' + g.voThu + '"' + dis + '></td>' +
+                  '<td><input class="gh-in" type="number" min="0" data-gh-coc="' + escH(g.px) + '" value="' + g.voTra + '"' + dis + '></td>' +
+                  '<td><input class="gh-in gh-thu" type="number" min="0" step="1000" data-gh-thu="' + escH(g.px) + '" value="' + g.daThu + '"' + dis + '></td>' +
+                  '<td class="gh-no" data-gh-no="' + escH(g.px) + '">' + nfN(g.noTien) + '</td>' +
+                  '<td><select class="gh-nvsel" data-gh-nv="' + escH(g.px) + '"' + dis + '>' + nvOpts + '</select></td>' +
+                  '<td class="gh-acts"><button type="button" class="btn ghost" data-gh-save="' + escH(g.px) + '">💾 Lưu</button> ' +
+                  '<button type="button" class="btn ghost" data-gh-print="' + escH(g.px) + '">🖨 In phiếu giao hàng</button></td></tr>';
+              }
+            
+              function renderGh(){
+                var tb = $("#gh-tbody"); if (!tb) return;
+                buildNvAll();
+                var thSel = $("#gh-f-thang");
+                if (thSel) {
+                  var cur = thSel.value, seen = {}, months = [];
+                  pxAll().forEach(function(r){ var m = String(r.ngay || "").slice(3); if (m && !seen[m]) { seen[m] = 1; months.push(m); } });
+                  months.sort(function(a, b){
+                    var pa = a.split("/"), pb = b.split("/");
+                    return ((+pb[1] || 0) * 100 + (+pb[0] || 0)) - ((+pa[1] || 0) * 100 + (+pa[0] || 0));
+                  });
+                  thSel.innerHTML = '<option value="">Tất cả tháng</option>' + months.map(function(m){ return '<option value="' + escH(m) + '">' + escH(m) + '</option>'; }).join("");
+                  if (cur) thSel.value = cur;
+                  else if (!thSel.dataset.ghInit && months.length) { thSel.value = months[0]; thSel.dataset.ghInit = "1"; }
+                }
+                var nvSel = $("#gh-f-nv");
+                if (nvSel) {
+                  var curNv = nvSel.value;
+                  nvSel.innerHTML = '<option value="">Tất cả NV</option>' + NV_ALL.map(function(x){ return '<option value="' + escH(x.code) + '">' + escH(x.label) + '</option>'; }).join("");
+                  if (curNv) nvSel.value = curNv;
+                }
+                var q = normS(($("#gh-q") || {}).value || "");
+                var fNv = nvSel ? nvSel.value : "";
+                var fTh = thSel ? thSel.value : "";
+                var all = ghGroups();
+                var filtered = all.filter(function(g){
+                  if (fNv && String(g.nv) !== String(fNv)) return false;
+                  if (fTh && String(g.ngay || "").slice(3) !== fTh) return false;
+                  if (q && normS([g.px, g.maKH, g.tenKH, g.sdt, g.dia, g.hangTxt].join(" ")).indexOf(q) < 0) return false;
+                  return true;
+                });
+                var sSl = 0, sVo = 0, sThu = 0, sNo = 0;
+                filtered.forEach(function(g){ sSl += g.sl; sVo += g.voThu; sThu += g.daThu; sNo += g.noTien; });
+                var sumEl = $("#gh-sum");
+                if (sumEl) sumEl.innerHTML = "📦 Đang hiện <b>" + filtered.length + "</b> phiếu · 🚚 giao <b>" + nfN(sSl) + "</b> bình · ↩ vỏ thu về <b>" + nfN(sVo) + "</b> · 💵 đã thu <b>" + vndN(sThu) + "</b> · 🧾 nợ tiền <b>" + vndN(sNo) + "</b>";
+                var show = filtered.slice(0, 200);
+                tb.innerHTML = show.length ? show.map(ghRowHtml).join("") :
+                  '<tr><td colspan="11" style="text-align:center">Chưa có phiếu giao nào khớp bộ lọc.</td></tr>';
+                var note = $("#gh-note");
+                if (note) note.innerHTML = filtered.length > show.length ?
+                  "Đang hiện " + show.length + "/" + filtered.length + " phiếu mới nhất — gõ ô Tìm hoặc chọn tháng/NV để thu hẹp." :
+                  "Phiếu <b>Đơn mới</b> sửa trực tiếp trên đơn hàng (đồng bộ Firebase như đặt đơn). Phiếu <b>Sổ gốc</b> lưu lớp sửa riêng trên máy này; nợ tiền/nợ vỏ của khách được cộng/trừ theo phần chênh lệch ngay khi Lưu.";
+                var lock = $("#gh-lock");
+                if (lock) {
+                  lock.innerHTML = ghUnlocked()
+                    ? "🔓 Đã mở khoá — điền số rồi bấm 💾 Lưu, hoặc 🖨 In phiếu (tự lưu trước khi in)."
+                    : '<button type="button" class="btn ghost" id="gh-unlock">🔓 Mở khoá để điền số liệu</button> Xem &amp; in phiếu thì không cần khoá; điền/lưu cần mật khẩu như các mục sửa khác.';
+                  var ub = $("#gh-unlock");
+                  if (ub) ub.addEventListener("click", function(){ if (typeof askPassword === "function") askPassword(function(){ renderGh(); }); });
+                }
+              }
+            
+              function initGh(){
+                var tb = $("#gh-tbody");
+                if (tb) {
+                  tb.addEventListener("click", function(ev){
+                    var t = ev.target;
+                    var b = t && t.closest ? t.closest("[data-gh-save],[data-gh-print]") : null;
+                    if (!b) return;
+                    if (b.hasAttribute("data-gh-save")) ghSave(b.getAttribute("data-gh-save"), false);
+                    else ghSave(b.getAttribute("data-gh-print"), true);
+                  });
+                  tb.addEventListener("input", function(ev){
+                    var el = ev.target; if (!el || !el.getAttribute) return;
+                    var px = el.getAttribute("data-gh-thu") || el.getAttribute("data-gh-vo") || el.getAttribute("data-gh-coc");
+                    if (!px) return;
+                    var g = ghGroups().find(function(x){ return x.px === px; }); if (!g) return;
+                    var vals = ghRead(px);
+                    var no = g.isNew ? Math.max(0, g.tien - vals.daThu) : Math.max(0, g.noTien - (vals.daThu - g.daThu));
+                    var cell = document.querySelector('[data-gh-no="' + px + '"]');
+                    if (cell) cell.textContent = nfN(no);
+                  });
+                }
+                var btn = $("#gh-tab-btn");
+                if (btn) btn.addEventListener("click", function(){ setTimeout(renderGh, 0); });
+                var q = $("#gh-q"); if (q) q.addEventListener("input", renderGh);
+                var fnv = $("#gh-f-nv"); if (fnv) fnv.addEventListener("change", renderGh);
+                var fth = $("#gh-f-thang"); if (fth) fth.addEventListener("change", renderGh);
+                var rl = $("#gh-reload"); if (rl) rl.addEventListener("click", renderGh);
+                if (Object.keys(GH).length) {
+                  try { buildPXView(); } catch(e){}
+                  try { renderPx(); } catch(e){}
+                  try { recomputeStats(); buildDash(); } catch(e){}
+                  if (window.LH_NS_SYNC) { try { window.LH_NS_SYNC(); } catch(e){} }
+                }
+                renderGh();
+              }
+              window.LH_GH_SYNC = renderGh;
+              window.LH_GH = { render: renderGh, groups: ghGroups, save: ghSave, edits: function(){ return GH; } };
+              initGh();
+            })();
+        </script>
         <script>
-            (function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a4a1ebb4abb0e5d4',t:'MTc5MTkzMjAwOQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();
+            (function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a4a2149d3fc3e2ef',t:'MTc5MTkzMzY4NQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();
         </script>
     </body>
 
