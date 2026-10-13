@@ -4608,6 +4608,77 @@ window.docSoThanhChu = docSoThanhChu;
     }
   };
 
+  /* ---------- xuất Excel (.xlsm) để sửa ngoài rồi Upload lại ---------- */
+  function escX(v){ return String(v == null ? "" : v).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;"); }
+  function colName(i){ var t = ""; i++; while (i > 0){ var m = (i - 1) % 26; t = String.fromCharCode(65 + m) + t; i = Math.floor((i - 1) / 26); } return t; }
+  function sheetXml(rows){
+    var body = rows.map(function(r, ri){
+      var cells = r.map(function(c, ci){
+        var ref = colName(ci) + (ri + 1);
+        if (c === "" || c === null || c === undefined) return '<c r="' + ref + '"/>';
+        if (typeof c === "number") return '<c r="' + ref + '"><v>' + c + "</v></c>";
+        return '<c r="' + ref + '" t="inlineStr"><is><t>' + escX(c) + "</t></is></c>";
+      }).join("");
+      return '<row r="' + (ri + 1) + '">' + cells + "</row>";
+    }).join("");
+    return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n' +
+      '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetData>' + body + "</sheetData></worksheet>";
+  }
+  var CRC_T = null;
+  function crc32(u8){
+    if (!CRC_T){ CRC_T = []; for (var n = 0; n < 256; n++){ var c = n; for (var k = 0; k < 8; k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1); CRC_T[n] = c >>> 0; } }
+    var crc = 0xFFFFFFFF;
+    for (var i = 0; i < u8.length; i++) crc = (CRC_T[(crc ^ u8[i]) & 255] ^ (crc >>> 8)) >>> 0;
+    return (crc ^ 0xFFFFFFFF) >>> 0;
+  }
+  function zipStored(files){
+    var enc = new TextEncoder();
+    var chunks = [], central = [], off = 0;
+    function u16(v){ return [v & 255, (v >>> 8) & 255]; }
+    function u32(v){ return [v & 255, (v >>> 8) & 255, (v >>> 16) & 255, (v >>> 24) & 255]; }
+    files.forEach(function(f){
+      var name = enc.encode(f.name), data = enc.encode(f.text);
+      var crc = crc32(data);
+      var head = [].concat(u32(0x04034b50), u16(20), u16(0x0800), u16(0), u16(0), u16(0), u32(crc), u32(data.length), u32(data.length), u16(name.length), u16(0));
+      chunks.push(new Uint8Array(head), name, data);
+      var cen = [].concat(u32(0x02014b50), u16(20), u16(20), u16(0x0800), u16(0), u16(0), u16(0), u32(crc), u32(data.length), u32(data.length), u16(name.length), u16(0), u16(0), u16(0), u16(0), u32(0), u32(off));
+      central.push(new Uint8Array(cen), name);
+      off += head.length + name.length + data.length;
+    });
+    var cenSize = central.reduce(function(a, c){ return a + c.length; }, 0);
+    var end = new Uint8Array([].concat(u32(0x06054b50), u16(0), u16(0), u16(files.length), u16(files.length), u32(cenSize), u32(off), u16(0)));
+    return new Blob(chunks.concat(central, [end]), { type: "application/vnd.ms-excel.sheet.macroEnabled.12" });
+  }
+  function exportExcel(){
+    var ns = [["STT", "Họ tên nhân viên", "Ngày tháng năm sinh", "Số điện thoại", "Ghi chú", "Tiền công/đơn vị (đ)", "Số đơn", "SL bình giao", "SL vỏ lấy về", "Tiền công tạm tính (đ)"]];
+    NS.emps.forEach(function(e, i){
+      var a = aggOf(e);
+      ns.push([i + 1, e.ten || "", e.sinh || "", e.sdt || "", e.ghi || "", rateOf(e), a.don, a.binh, a.vo, a.tien]);
+    });
+    var bc = [["Ngày", "Mã đơn", "Nhân viên", "SL bình giao", "SL vỏ lấy về", "Tiền công (đ/đơn vị)", "Đơn vị tính", "Tổng tiền (đ)", "Nguồn"]];
+    allRows().slice()
+      .sort(function(x, y){ return String(x.ngay).localeCompare(String(y.ngay)) || String(x.maDon).localeCompare(String(y.maDon)); })
+      .forEach(function(r){
+        bc.push([fmtDate(r.ngay), r.maDon || "", r.nvTen || "", r.slBinh, r.slVo, r.tienCong, r.donVi || "Bình", r.tong, r.src === "man" ? "Nhập tay" : "Phiếu xuất"]);
+      });
+    var blob = zipStored([
+      { name: "[Content_Types].xml", text: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.ms-excel.sheet.macroEnabled.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/worksheets/sheet2.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/></Types>' },
+      { name: "_rels/.rels", text: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>' },
+      { name: "xl/workbook.xml", text: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="NhanSu" sheetId="1" r:id="rId1"/><sheet name="BangCong" sheetId="2" r:id="rId2"/></sheets></workbook>' },
+      { name: "xl/_rels/workbook.xml.rels", text: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet2.xml"/></Relationships>' },
+      { name: "xl/worksheets/sheet1.xml", text: sheetXml(ns) },
+      { name: "xl/worksheets/sheet2.xml", text: sheetXml(bc) }
+    ]);
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url;
+    a.download = "NhanSu_BangCong_LangHa.xlsm";
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 4000);
+    say("⬇ Đã tải NhanSu_BangCong_LangHa.xlsm — sửa trong Excel xong, bấm Upload Excel (hoặc kéo thả file vào trang) để đồng bộ lại.", "ok");
+  }
+  window.LH_NS_EXPORT = exportExcel;
+
   renderAll();
 })();
 
@@ -4745,9 +4816,9 @@ window.docSoThanhChu = docSoThanhChu;
   card.style.display = "none"; /* chỉ hiện khi bấm nút Upload Excel */
   card.innerHTML =
     "<h2>🔐 Đồng bộ Excel &amp; chế độ sửa</h2>" +
-    '<p class="hint">Nút <b>Upload Excel</b> nằm trên thanh tiêu đề ngay phía trên thẻ này: chọn file Excel (.xlsm/.xlsx) gồm sheet <b>NhanSu</b> &amp; <b>BangCong</b>, trang sẽ tự đồng bộ hồ sơ nhân viên và các lần giao nhập tay khớp theo họ tên. Upload và bật sửa dữ liệu đều cần nhập mật khẩu. Bình thường trang ở <b>chế độ chỉ xem</b>: các nút thêm / sửa / xoá bị ẩn. Bạn cũng có thể <b>kéo thả file Excel thẳng vào trang</b> để đồng bộ — cách này không cần mở hộp chọn file của Windows.</p>' +
+    '<p class="hint">Nút <b>Upload Excel</b> nằm trên thanh tiêu đề ngay phía trên thẻ này: chọn file Excel (.xlsm/.xlsx) gồm sheet <b>NhanSu</b> &amp; <b>BangCong</b>, trang sẽ tự đồng bộ hồ sơ nhân viên và các lần giao nhập tay khớp theo họ tên. Upload và bật sửa dữ liệu đều cần nhập mật khẩu. Bình thường trang ở <b>chế độ chỉ xem</b>: các nút thêm / sửa / xoá bị ẩn. Bạn cũng có thể <b>kéo thả file Excel thẳng vào trang</b> để đồng bộ — cách này không cần mở hộp chọn file của Windows. Cần sửa trên Excel thì bấm <b>⬇ Tải Excel hiện tại</b> để tải file <b>NhanSu_BangCong_LangHa.xlsm</b> về, sửa xong upload lại.</p>' +
     '<div class="tools">' +
-      '<button type="button" class="btn" id="lh-pick-file">⬆ Chọn file Excel để đồng bộ</button>' +
+      '<button type="button" class="btn" id="lh-pick-file">⬆ Chọn file Excel để đồng bộ</button><button type="button" class="btn ghost" id="lh-dl-cur">⬇ Tải Excel hiện tại (.xlsm)</button>' +
       '<button type="button" class="btn ghost" id="lh-edit-toggle" style="display:none">✏️ Bật chế độ sửa</button>' +
       '<button type="button" class="btn ghost" id="lh-changepw" style="display:none">🔑 Đổi mật khẩu</button>' +
       '<button type="button" class="btn ghost" id="lh-lock" style="display:none">🔒 Khoá lại</button>' +
@@ -4887,6 +4958,11 @@ window.docSoThanhChu = docSoThanhChu;
   });
   var pickBtn = document.getElementById("lh-pick-file");
   if (pickBtn) pickBtn.addEventListener("click", function(){ openUpload(); });
+  var dlCur = document.getElementById("lh-dl-cur");
+  if (dlCur) dlCur.addEventListener("click", function(){
+    if (window.LH_NS_EXPORT) window.LH_NS_EXPORT();
+    else if (typeof toast === "function") toast("Chưa sẵn sàng xuất Excel.", "bad");
+  });
   var bkBtn = document.getElementById("lh-bk-toggle");
   if (bkBtn) bkBtn.addEventListener("click", function(){
     var panel = document.getElementById("lh-bk-panel");
@@ -5127,7 +5203,7 @@ window.docSoThanhChu = docSoThanhChu;
     if (!panel) return;
     var arr = [];
     try { arr = JSON.parse(localStorage.getItem("langha_nhansu_backups_v1") || "[]"); } catch(e){}
-    var html = '<div class="hint" style="margin-bottom:8px">🕘 <b>Lịch sử Nhân sự</b> — trang tự lưu 1 bản <b>trước</b> mỗi lần sửa hoặc upload (tối đa 8 bản gần nhất, lưu trên máy này). Khi khôi phục 1 bản cũ, bản hiện tại cũng được lưu lại để quay lui tiếp.</div>';
+    var html = '<div class="hint" style="margin-bottom:8px">🕘 <b>Lịch sử Nhân sự</b> — trang tự lưu 1 bản <b>trước</b> mỗi lần thay đổi: sửa trực tiếp, upload Excel, khôi phục, <b>hoặc khi máy khác đẩy dữ liệu mới qua Firebase</b> (tối đa 8 bản gần nhất, lưu trên máy này). Khi khôi phục 1 bản cũ, bản hiện tại cũng được lưu lại để quay lui tiếp.</div>';
     if (!arr.length) html += '<div class="hint">Chưa có bản sao lưu nào — cứ sửa nhân viên hoặc upload Excel là trang tự lưu.</div>';
     else html += arr.map(function(b, i){
       var o = null;
@@ -5265,8 +5341,19 @@ window.docSoThanhChu = docSoThanhChu;
     pushTimer = setTimeout(doPush, 350);
   };
 
+  function nsSnapshotCloud(){
+    try {
+      var prev = localStorage.getItem(LS);
+      if (!prev) return;
+      var arr = JSON.parse(localStorage.getItem("langha_nhansu_backups_v1") || "[]");
+      if (arr.length && arr[0].data === prev) return;
+      arr.unshift({ t: Date.now(), data: prev });
+      localStorage.setItem("langha_nhansu_backups_v1", JSON.stringify(arr.slice(0, 8)));
+    } catch(e){}
+  }
   function applyRemote(j, t){
     shadow = j;
+    nsSnapshotCloud();
     window.__LH_NS_APPLYING = true;
     try {
       localStorage.setItem(LS, j);
@@ -5312,5 +5399,5 @@ window.docSoThanhChu = docSoThanhChu;
   else start(0);
 })();
 </script>
-<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a4a1680cbf9af995',t:'MTc5MTkyNjYxNw=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a4a17d4d4b6d9cac',t:'MTc5MTkyNzQ4Nw=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
