@@ -4745,7 +4745,7 @@ window.docSoThanhChu = docSoThanhChu;
   card.style.display = "none"; /* chỉ hiện khi bấm nút Upload Excel */
   card.innerHTML =
     "<h2>🔐 Đồng bộ Excel &amp; chế độ sửa</h2>" +
-    '<p class="hint">Nút <b>Upload Excel</b> nằm trên thanh tiêu đề ngay phía trên thẻ này: chọn file Excel (.xlsm/.xlsx) gồm sheet <b>NhanSu</b> &amp; <b>BangCong</b>, trang sẽ tự đồng bộ hồ sơ nhân viên và các lần giao nhập tay khớp theo họ tên. Upload và bật sửa dữ liệu đều cần nhập mật khẩu. Bình thường trang ở <b>chế độ chỉ xem</b>: các nút thêm / sửa / xoá bị ẩn.</p>' +
+    '<p class="hint">Nút <b>Upload Excel</b> nằm trên thanh tiêu đề ngay phía trên thẻ này: chọn file Excel (.xlsm/.xlsx) gồm sheet <b>NhanSu</b> &amp; <b>BangCong</b>, trang sẽ tự đồng bộ hồ sơ nhân viên và các lần giao nhập tay khớp theo họ tên. Upload và bật sửa dữ liệu đều cần nhập mật khẩu. Bình thường trang ở <b>chế độ chỉ xem</b>: các nút thêm / sửa / xoá bị ẩn. Bạn cũng có thể <b>kéo thả file Excel thẳng vào trang</b> để đồng bộ — cách này không cần mở hộp chọn file của Windows.</p>' +
     '<div class="tools">' +
       '<button type="button" class="btn" id="lh-pick-file">⬆ Chọn file Excel để đồng bộ</button>' +
       '<button type="button" class="btn ghost" id="lh-edit-toggle" style="display:none">✏️ Bật chế độ sửa</button>' +
@@ -4861,6 +4861,22 @@ window.docSoThanhChu = docSoThanhChu;
     else handleUpload(f);
     upWantsJson = false;
     upIn.accept = ".xlsm,.xlsx";
+  });
+  /* Kéo thả file Excel/JSON thẳng vào trang — khỏi mở hộp chọn file của Windows.
+     Trang web không điều khiển được con trỏ trên hộp thoại hệ thống nên đây là đường vòng khi con trỏ bị ẩn. */
+  document.addEventListener("dragover", function(e){ e.preventDefault(); });
+  document.addEventListener("drop", function(e){
+    e.preventDefault();
+    if (!e.dataTransfer || !e.dataTransfer.files || !e.dataTransfer.files.length) return;
+    var f = e.dataTransfer.files[0];
+    if (!/\.(xlsm|xlsx|json)$/i.test(f.name || "")) return;
+    var goDrop = function(){
+      showAdminCard();
+      if (/\.json$/i.test(f.name || "")) handleJsonRestore(f);
+      else handleUpload(f);
+    };
+    if (isUnlocked()) goDrop();
+    else askPassword(goDrop);
   });
   function openUpload(){ upIn.click(); }
   var dlBtn = document.getElementById("lh-dl-top") || document.getElementById("lh-dl-xlsm");
@@ -5296,5 +5312,5 @@ window.docSoThanhChu = docSoThanhChu;
   else start(0);
 })();
 </script>
-<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a4a1643caa51f995',t:'MTc5MTkyNjQ2MA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a4a1680cbf9af995',t:'MTc5MTkyNjYxNw=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
