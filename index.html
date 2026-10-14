@@ -1218,6 +1218,7 @@
                         <button type="button" class="btn ghost" id="tc-today">Hôm nay</button>
                         <span class="hint" id="tc-nxref"></span>
                     </div>
+                    <div id="tc-month-total" style="margin:10px 0"></div>
                     <div class="nx-mrow-l" id="tc-day-title"></div>
                     <div id="tc-money" class="nx-money"></div>
                     <div id="tc-donthu" style="margin-top:8px"></div>
@@ -6474,8 +6475,20 @@
                   '<div class="hint">Từ <b>' + don.don + '</b> đơn giao ngày ' + escH(dmy(curDay)) + ' · trong đó sổ thu tay: <b>' + vndN(dayAgg.thu) + '</b>. Số tự lấy từ ô “Đã thu tiền” của từng đơn (tab 📦 Lịch sử giao hàng) — đừng nhập trùng khoản này vào thẻ THU nữa.</div></div>';
                 var mk = String(curDay || "").slice(0, 7), mp = mk.split("-");
                 var mon = tcAgg(null, mk);
+                var donM2 = donThuAgg(null, (mp[1] || "") + "/" + (mp[0] || ""));
+                var mThu = mon.thu + donM2.tien, mChi = mon.chi, mCon = mThu - mChi;
+                var mtEl = $("#tc-month-total");
+                if (mtEl) {
+                  mtEl.innerHTML = '<div class="nx-mrow-l">📚 THÁNG ' + (mp[1] || "") + "/" + (mp[0] || "") + ' — chỉ riêng tháng này (không tính ngày khác, tháng khác)</div>' +
+                    '<div class="nx-money">' +
+                    '<div class="nx-mbox thu"><div class="nx-m-lb">💵 TỔNG THU THÁNG</div><div class="nx-m-v" style="font-size:23px">' + vndN(mThu) + '</div></div>' +
+                    '<div class="nx-mbox chi"><div class="nx-m-lb">🧾 TỔNG CHI THÁNG</div><div class="nx-m-v" style="font-size:23px">' + vndN(mChi) + '</div></div>' +
+                    '<div class="nx-mbox con' + (mCon < 0 ? " neg" : "") + '"><div class="nx-m-lb">🏦 CÒN DƯ THÁNG (Thu − Chi)</div><div class="nx-m-v" style="font-size:23px">' + vndN(mCon) + '</div></div>' +
+                    '</div>' +
+                    '<div class="hint">Tổng thu tháng gồm: thu nhập tay <b>' + vndN(mon.thu) + '</b> + thu từ đơn đã giao <b>' + vndN(donM2.tien) + '</b> (' + donM2.don + ' đơn trong tháng). Tổng chi tháng là tổng các khoản ở thẻ CHI trong tháng.</div>';
+                }
                 var ml = $("#tc-monthline");
-                if (ml) ml.innerHTML = "📚 Cả tháng " + (mp[1] || "") + "/" + (mp[0] || "") + ": Thu <b>" + vndN(mon.thu) + "</b> · Chi <b>" + vndN(mon.chi) + "</b> · Còn lại <b>" + vndN(mon.con) +  "</b> (" + mon.n + " khoản) · 🚚 Thu đơn giao trong tháng: <b>" + vndN(donThuAgg(null, (mp[1] || "") + "/" + (mp[0] || "")).tien) + "</b>";
+                if (ml) ml.innerHTML = "📚 Tháng " + (mp[1] || "") + "/" + (mp[0] || "") + " có <b>" + mon.n + "</b> khoản trong 2 thẻ Thu/Chi · 🚚 <b>" + donM2.don + "</b> đơn đã giao trong tháng (tiền thu của các đơn này đã nằm trong TỔNG THU THÁNG ở trên).";
                 var nx = $("#tc-nxref");
                 if (nx) {
                   var txt = "";
@@ -6571,7 +6584,7 @@
             })();
         </script>
         <script>
-            (function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a4a761c7189f28ee',t:'MTc5MTk4OTI3NA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();
+            (function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a4a774f1daee04d7',t:'MTc5MTk5MDA1OQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();
         </script>
     </body>
 
