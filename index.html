@@ -627,6 +627,63 @@
             }
             .ns-grp td{background:rgba(77,141,255,.12);font-size:13px}
             tr.ns-grp[data-ns-mrow]{cursor:pointer}
+            .tc-tools{display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end;margin:8px 0}
+            .tc-form{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:8px 0}
+            @media (max-width:900px){.tc-form{grid-template-columns:repeat(2,1fr)}}
+            .tc-lb{display:flex;flex-direction:column;gap:4px;font-size:12.5px;font-weight:700;color:var(--ink-2)}
+            .tc-lb input,.tc-lb select{min-height:42px;font-size:15.5px}
+            .tc-newrow{display:none}
+            .tc-form2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:8px 0}
+            @media (max-width:560px){.tc-form2{grid-template-columns:1fr}}
+            .tc-card-thu{border-top:3px solid rgba(46,160,90,.85)}
+            .tc-card-chi{border-top:3px solid rgba(240,140,60,.9)}
+            .tc-sumline{font-size:13.5px;margin:8px 0 6px}
+            .tc-tbl{min-width:560px}
+            .tc-thu{color:#7ee2a8;font-weight:800}
+            .tc-chi{color:#ffb27e;font-weight:800}
+            .tc-amt{text-align:right;font-weight:800;white-space:nowrap}
+            .nx-ton{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+            .nx-chip{border:1px solid var(--line);border-radius:99px;padding:5px 11px;font-size:12.5px}
+            .nx-chip b{color:#fbbf24}
+            .nx-chip.neg b{color:#ff9c9c}
+            .nx-form{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin:8px 0}
+            .nx-form .nx-hang-lb{grid-column:span 2}
+            @media (max-width:900px){.nx-form{grid-template-columns:repeat(3,1fr)}}
+            @media (max-width:560px){.nx-form{grid-template-columns:repeat(2,1fr)}}
+            .nx-money{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px}
+            .nx-mbox{border:1px solid var(--line);border-radius:12px;padding:9px 12px}
+            .nx-mbox.thu{background:rgba(46,160,90,.17);border-color:rgba(46,160,90,.65)}
+            .nx-mbox.chi{background:rgba(240,140,60,.16);border-color:rgba(240,140,60,.65)}
+            .nx-mbox.con{background:rgba(250,204,21,.13);border-color:rgba(250,204,21,.55)}
+            .nx-mbox.con.neg{background:rgba(235,87,87,.17);border-color:rgba(235,87,87,.65)}
+            .nx-mbox .nx-m-lb{font-size:11.5px;font-weight:700;color:var(--ink-2);text-transform:uppercase;letter-spacing:.3px}
+            .nx-mbox .nx-m-v{font-size:20px;font-weight:800;margin-top:2px}
+            .nx-mbox.thu .nx-m-v{color:#7ee2a8}
+            .nx-mbox.chi .nx-m-v{color:#ffb27e}
+            .nx-mbox.con .nx-m-v{color:#fbbf24}
+            .nx-mbox.con.neg .nx-m-v{color:#ff9c9c}
+            .nx-mrow-l{font-size:12.5px;color:var(--ink-2);margin:10px 0 5px;font-weight:700}
+            .nx-lb{display:flex;flex-direction:column;gap:4px;font-size:12.5px;font-weight:700;color:var(--ink-2)}
+            .nx-lb input,.nx-lb select{min-height:42px;font-size:15.5px}
+            .nx-newrow{display:none}
+            .nx-tbl{width:100%;min-width:780px;border-collapse:collapse;font-size:14.5px;table-layout:fixed}
+            .nx-tbl th,.nx-tbl td{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+            .nx-tbl th{white-space:normal;overflow:visible;text-overflow:clip}
+            .nx-tbl td.nx-wrap{white-space:normal;overflow:visible}
+            .nx-tbl th,.nx-tbl td{border-bottom:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:middle}
+            .nx-tbl td.num,.nx-tbl th.num{text-align:right}
+            .nx-tbl td.c,.nx-tbl th.c{text-align:center}
+            .nx-tbl tbody tr:nth-child(even){background:rgba(127,160,220,.05)}
+            .nx-tbl tbody tr:hover{background:rgba(127,160,220,.11)}
+            .nx-money{text-align:right;font-weight:700}
+            .nx-in-card{border-top:3px solid rgba(46,160,90,.75)}
+            .nx-out-card{border-top:3px solid rgba(240,140,60,.85)}
+            .nx-sumline{font-size:14px;margin:8px 0 6px}
+            .nx-tbl th{font-size:12.5px}
+            #tab-nx .btn{font-size:14px}
+            .nx-ton-num{color:#fbbf24}
+            .nx-ton-neg{color:#ff9c9c}
+            .nx-q{min-height:42px;margin-left:8px;min-width:200px;font-size:14.5px}
             #ns-tbl td.ns-date{vertical-align:top;font-weight:700;background:rgba(77,141,255,.08)}
             #ns-tbl .ns-date-in{position:sticky;top:42px;display:inline-block}
             @media (max-width:720px){#ns-tbl .ns-date-in{top:140px}}
@@ -705,6 +762,8 @@
                     </button>
                     <button data-tab="nhansu" id="ns-tab-btn">👷 Nhân sự</button>
                     <button data-tab="giao" id="gh-tab-btn">📦 Lịch sử giao hàng</button>
+                    <button data-tab="nx" id="nx-tab-btn">📥📤 Nhập/Xuất hàng</button>
+                    <button data-tab="tc" id="tc-tab-btn">💰 Thu / Chi ngày</button>
                 </nav>
             </div>
         </header>
@@ -1101,6 +1160,78 @@
                         </table>
                     </div>
                     <p class="hint" id="gh-note"></p>
+                </div>
+            </section>
+
+            <!-- ================= NHẬP / XUẤT HÀNG ================= -->
+            <section class="tab" id="tab-nx">
+                <div class="card">
+                    <h2>🏭 Hàng trong kho = Nhập − Xuất (theo từng loại hàng)</h2>
+                    <p class="hint">Tự cộng từ 2 khu vực Nhập/Xuất bên dưới: <b>Còn trong kho = Tổng nhập − Tổng xuất</b> cho từng loại hàng. Dữ liệu Nhập/Xuất được lưu trên máy này; thêm/xoá phiếu cần mở khoá như các mục sửa khác.</p>
+                    <div class="tw">
+                        <table class="nx-tbl nx-ton-tbl">
+                            <colgroup>
+                                <col>
+                                <col style="width:110px">
+                                <col style="width:140px">
+                                <col style="width:140px">
+                                <col style="width:160px">
+                            </colgroup>
+                            <thead>
+                                <tr>
+                                    <th>Tên hàng</th>
+                                    <th class="c">Đơn vị</th>
+                                    <th class="c">Tổng nhập</th>
+                                    <th class="c">Tổng xuất</th>
+                                    <th class="c">Còn trong kho</th>
+                                </tr>
+                            </thead>
+                            <tbody id="nx-ton-body"></tbody>
+                        </table>
+                    </div>
+                    <p class="nx-sumline" id="nx-ton-sum"></p>
+                </div>
+                <div class="card">
+                    <h2>💰 Thu / Chi tiền hàng</h2>
+                    <div id="nx-money"></div>
+                    <p class="hint">Thu = tổng <b>Thành tiền</b> ở khu vực <b>Xuất hàng</b> (bán ra) · Chi = tổng <b>Thành tiền</b> ở khu vực <b>Nhập hàng</b> (mua vào) · <b>Còn lại = Thu − Chi</b>. Số tự cập nhật mỗi khi thêm/xoá phiếu.</p>
+                </div>
+                <div class="card nx-in-card">
+                    <h2>📥 Khu vực NHẬP HÀNG</h2>
+                    <div id="nx-in"></div>
+                </div>
+                <div class="card nx-out-card">
+                    <h2>📤 Khu vực XUẤT HÀNG</h2>
+                    <div id="nx-out"></div>
+                </div>
+            </section>
+
+            <!-- ================= THU / CHI TRONG NGÀY ================= -->
+            <section class="tab" id="tab-tc">
+                <div class="card">
+                    <h2>💰 Thu / Chi trong ngày</h2>
+                    <p class="hint">Sổ các khoản thu – chi tiền trong ngày (thu nợ, xăng xe, lương, điện nước…). Chọn ngày để xem riêng ngày đó; bấm ◀ ▶ để lùi/tiến 1 ngày. Thêm/xoá khoản cần mở khoá như các mục sửa khác; dữ liệu lưu trên máy này.</p>
+                    <div class="tc-tools">
+                        <button type="button" class="btn ghost" id="tc-prev">◀ Ngày trước</button>
+                        <label class="tc-lb">📅 Ngày xem<input type="date" id="tc-date"></label>
+                        <button type="button" class="btn ghost" id="tc-next">Ngày sau ▶</button>
+                        <button type="button" class="btn ghost" id="tc-today">Hôm nay</button>
+                        <span class="hint" id="tc-nxref"></span>
+                    </div>
+                    <div class="nx-mrow-l" id="tc-day-title"></div>
+                    <div id="tc-money" class="nx-money"></div>
+                    <div id="tc-donthu" style="margin-top:8px"></div>
+                    <p class="hint" id="tc-monthline"></p>
+                </div>
+                <div class="grid cols2 tc-cards">
+                    <div class="card tc-card-thu">
+                        <h2>💵 THẺ THU — tiền vào</h2>
+                        <div id="tc-thu-box"></div>
+                    </div>
+                    <div class="card tc-card-chi">
+                        <h2>🧾 THẺ CHI — tiền ra</h2>
+                        <div id="tc-chi-box"></div>
+                    </div>
                 </div>
             </section>
 
@@ -2577,13 +2708,11 @@
                 '<div class="quick" style="margin-top:8px"><button class="btn ghost" id="o-add">➕ Thêm dòng hàng</button>' +
                   '<span class="hint" style="align-self:center">Đơn vị “Bình/Thùng” được tính vào công nợ vỏ</span></div>' +
                 '<div class="form o-mid" style="margin-top:10px">' +
-                  '<label>Vỏ thu về (bình)<input id="o-vothu" type="number" min="0" value="'+(o.voThu||"")+'" placeholder="0"></label>' +
-                  '<label>Vỏ đặt cược / trả cược<input id="o-votra" type="number" min="0" value="'+(o.voTra||"")+'" placeholder="0"></label>' +
-                  '<label>Đã thu tiền (đ)<input id="o-dathu" type="number" min="0" step="1000" value="'+(o.daThu||"")+'" placeholder="0"><span class="hintline">Nợ = thành tiền − đã thu</span></label>' +
                   '<label>NV giao<select id="o-nv">'+NV_LIST.map(x => '<option'+(o.nv===x?" selected":"")+'>'+x+'</option>').join("")+'</select></label>' +
                   '<label class="o-half">Địa chỉ giao<input id="o-dia" value="'+esc(o.dia)+'" placeholder="Tự điền theo khách, sửa được"></label>' +
                   '<label class="o-half">Ghi chú<input id="o-ghi" value="'+esc(o.ghi||"")+'" placeholder="VD: giao buổi sáng, nhớ thu vỏ"></label>' +
                 '</div>' +
+                '<div class="hint" style="margin-top:6px">↩ <b>Vỏ thu về · Vỏ đặt cọc/trả cọc · Đã thu tiền</b> không nhập ở đây nữa — điền tại tab <b>📦 Lịch sử giao hàng</b> khi nhân viên mang vỏ về (số vẫn tự tính vào công nợ, phiếu in và Nhân sự như cũ).</div>' +
                 '<label class="chk" style="margin-top:10px"><input type="checkbox" id="o-upd" '+(o.updDept!==false?"checked":"")+'> ' +
                   'Cộng vào công nợ khách hàng (nợ tiền &amp; nợ vỏ) — bỏ chọn nếu khách đã trả ngay / phiếu chỉ để in</label>' +
                 '<div class="o-acts">' +
@@ -2632,9 +2761,6 @@
               }
               function syncFromForm(){
                 ORDER_DRAFT.ngay = f("o-ngay").value.trim() || todayVN();
-                ORDER_DRAFT.voThu = +f("o-vothu").value || 0;
-                ORDER_DRAFT.voTra = +f("o-votra").value || 0;
-                ORDER_DRAFT.daThu = +f("o-dathu").value || 0;
                 ORDER_DRAFT.nv = f("o-nv").value;
                 ORDER_DRAFT.dia = f("o-dia").value.trim();
                 ORDER_DRAFT.ghi = f("o-ghi").value.trim();
@@ -2729,7 +2855,7 @@
                 apKh(KH.find(c => c._id === id), true);
                 toast("✓ Đã thêm khách " + ma + " và chọn luôn cho đơn này", "ok");
               });
-              ["o-ngay","o-vothu","o-votra","o-dathu","o-nv","o-dia","o-ghi"].forEach(id => f(id).addEventListener("input", summ));
+              ["o-ngay","o-nv","o-dia","o-ghi"].forEach(id => f(id).addEventListener("input", summ));
               f("o-upd").addEventListener("change", summ);
               f("o-pxmode").addEventListener("change", e => {
                 ORD_CFG.pxMode = e.target.value; saveCfg();
@@ -2762,9 +2888,6 @@
               const err = f("o-err"), show = m => { err.style.display = "block"; err.innerHTML = m; };
               const o = ORDER_DRAFT;
               o.ngay = f("o-ngay").value.trim() || todayVN();
-              o.voThu = +f("o-vothu").value || 0;
-              o.voTra = +f("o-votra").value || 0;
-              o.daThu = +f("o-dathu").value || 0;
               o.nv = f("o-nv").value;
               o.dia = f("o-dia").value.trim();
               o.ghi = f("o-ghi").value.trim();
@@ -5978,8 +6101,477 @@
               initGh();
             })();
         </script>
+        <script id="lh-nx-js">
+            /* ===== patch32: tab Nhap/Xuat hang — 2 khu vuc rieng (Nhap / Xuat),
+               ten hang + ben giao + ben nhan dung dropdown (co them moi), tu tinh ton. ===== */
+            (function(){
+              "use strict";
+              var LS_NX = "langha_nhapxuat_v1";
+              var NX = { nhap: [], xuat: [], ben: [], hang: [] };
+              try {
+                var raw0 = JSON.parse(localStorage.getItem(LS_NX) || "null");
+                if (raw0) { NX.nhap = raw0.nhap || []; NX.xuat = raw0.xuat || []; NX.ben = raw0.ben || []; NX.hang = raw0.hang || []; }
+              } catch(e){}
+              var $ = function(s){ return document.querySelector(s); };
+              function saveNx(){ try { localStorage.setItem(LS_NX, JSON.stringify(NX)); } catch(e){} }
+              function num(v){ var n = +v; return isFinite(n) ? n : 0; }
+              function numIn(v){ return num(String(v == null ? "" : v).replace(/[^\d]/g, "")); }
+              function fmtMoneyEl(el){ if (!el) return; var d = String(el.value == null ? "" : el.value).replace(/[^\d]/g, ""); el.value = d ? nfN(num(d)) : ""; }
+              function escH(x){ return (typeof esc === "function") ? esc(x) : String(x == null ? "" : x); }
+              function nfN(x){ return (typeof nf === "function") ? nf(+x || 0) : String(+x || 0); }
+              function vndN(x){ return (typeof vnd === "function") ? vnd(+x || 0) : nfN(x) + " đ"; }
+              function normS(x){ return (typeof norm === "function") ? norm(x) : String(x || "").toLowerCase(); }
+              function todayIso(){ var d = new Date(), pp = function(n){ return String(n).padStart(2, "0"); }; return d.getFullYear() + "-" + pp(d.getMonth() + 1) + "-" + pp(d.getDate()); }
+              function dmy(iso){ var p = String(iso || "").split("-"); return (p.length === 3 && p[0].length === 4) ? p[2] + "/" + p[1] + "/" + p[0] : (iso || ""); }
+              function unlocked(){ try { return (typeof isUnlocked === "function") ? !!isUnlocked() : true; } catch(e){ return true; } }
+              function gate(go){ if (unlocked()) go(); else if (typeof askPassword === "function") askPassword(go); else go(); }
+            
+              function catalog(){
+                var seen = {}, out = [];
+                try {
+                  if (typeof SALE !== "undefined" && SALE) SALE.forEach(function(r){
+                    var code = r[6]; if (!code || seen[code]) return; seen[code] = 1;
+                    out.push({ ten: r[7] || code, code: code, gia: (typeof priceOf === "function") ? (priceOf(code) || 0) : 0 });
+                  });
+                } catch(e){}
+                (NX.hang || []).forEach(function(h){ if (h && !seen[h]) { seen[h] = 1; out.push({ ten: h, code: h, gia: 0 }); } });
+                if (!out.length) ["Lavie 19L", "Lavie Vòi", "Viva", "Mir vòi", "Mir úp"].forEach(function(h){ out.push({ ten: h, code: h, gia: 0 }); });
+                out.sort(function(a, b){ return a.ten < b.ten ? -1 : 1; });
+                return out;
+              }
+              function parties(){
+                var seen = {}, out = [];
+                function add(x){ x = String(x || "").trim(); if (x && !seen[x]) { seen[x] = 1; out.push(x); } }
+                ["Kho K1", "Kho K2", "Kho K12", "Cty Nhím Kon", "Nhà phân phối", "Khách hàng", "Nhân viên giao hàng"].forEach(add);
+                try {
+                  var o = JSON.parse(localStorage.getItem("langha_nhansu_v1") || "null");
+                  if (o && o.emps) o.emps.forEach(function(e){ add(e.ten); });
+                } catch(e){}
+                (NX.ben || []).forEach(add);
+                NX.nhap.concat(NX.xuat).forEach(function(e){ add(e.giao); add(e.nhan); });
+                return out;
+              }
+              var DVIS = ["Bình", "Thùng", "Kiện", "Chai", "Ly", "Cốc", "Can", "Lít", "Kg", "Cái"];
+              var KIND = { "in": { key: "nhap", icon: "📥", ten: "NHẬP", verb: "nhập" }, "out": { key: "xuat", icon: "📤", ten: "XUẤT", verb: "xuất" } };
+            
+              function benSelect(kind, field, pts){
+                return '<select id="nx-' + kind + '-' + field + '">' + pts.map(function(x){ return '<option value="' + escH(x) + '">' + escH(x) + '</option>'; }).join("") +
+                  '<option value="__new__">➕ Bên mới (tự nhập)…</option></select>';
+              }
+              function formHtml(kind){
+                var K = KIND[kind], cat = catalog(), pts = parties();
+                function lb(txt, inner){ return '<label class="nx-lb">' + txt + inner + '</label>'; }
+                return '<div class="nx-form">' +
+                  lb("📅 Ngày", '<input type="date" id="nx-' + kind + '-ngay" value="' + todayIso() + '">') +
+                  '<label class="nx-lb nx-hang-lb">📦 Tên hàng<select id="nx-' + kind + '-hang">' + cat.map(function(o){ return '<option value="' + escH(o.code) + '" data-gia="' + (o.gia || 0) + '">' + escH(o.ten) + '</option>'; }).join("") + '<option value="__new__">➕ Hàng khác (tự nhập)…</option></select></label>' +
+                  '<label class="nx-lb nx-newrow" id="nx-' + kind + '-hangnew-lb">Tên hàng mới<input type="text" id="nx-' + kind + '-hangnew" placeholder="Nhập tên hàng"></label>' +
+                  lb("🔢 Số lượng", '<input type="number" id="nx-' + kind + '-sl" min="0" step="1" value="0">') +
+                  lb("📏 Đơn vị tính", '<select id="nx-' + kind + '-dvi">' + DVIS.map(function(d){ return '<option>' + d + '</option>'; }).join("") + '</select>') +
+                  lb("💲 Đơn giá (đ)", '<input type="text" inputmode="numeric" class="nx-money" id="nx-' + kind + '-gia" value="0">') +
+                  lb("💰 Thành tiền (đ)", '<input type="text" inputmode="numeric" class="nx-money" id="nx-' + kind + '-tien" value="0">') +
+                  lb("🤝 Bên giao", benSelect(kind, "giao", pts)) +
+                  '<label class="nx-lb nx-newrow" id="nx-' + kind + '-giaonew-lb">Tên bên giao mới<input type="text" id="nx-' + kind + '-giaonew" placeholder="Nhập tên bên giao"></label>' +
+                  lb("🎯 Bên nhận", benSelect(kind, "nhan", pts)) +
+                  '<label class="nx-lb nx-newrow" id="nx-' + kind + '-nhannew-lb">Tên bên nhận mới<input type="text" id="nx-' + kind + '-nhannew" placeholder="Nhập tên bên nhận"></label>' +
+                  lb("📝 Ghi chú", '<input type="text" id="nx-' + kind + '-ghi" placeholder="Không bắt buộc">') +
+                  '</div>' +
+                  '<button type="button" class="btn" data-nx-add="' + kind + '">' + K.icon + ' Thêm phiếu ' + K.verb + '</button>' +
+                  '<input type="search" class="nx-q" id="nx-' + kind + '-q" placeholder="🔎 Tìm trong bảng ' + K.verb + '…">' +
+                  '<span class="hint"> Thêm/Xoá cần mở khoá như các mục sửa khác.</span>' +
+                  '<p class="nx-sumline" id="nx-' + kind + '-sum"></p>' +
+                  '<div class="tw"><table class="nx-tbl"><colgroup>' +
+                  '<col style="width:96px"><col style="width:250px"><col style="width:96px"><col style="width:84px"><col style="width:112px"><col style="width:132px"><col style="width:170px"><col style="width:170px"><col><col style="width:44px">' +
+                  '</colgroup><thead><tr>' +
+                  '<th>Ngày</th><th>Tên hàng</th><th class="c">Số lượng</th><th class="c">Đơn vị</th><th class="num">Đơn giá</th><th class="num">Thành tiền</th><th>Bên giao</th><th>Bên nhận</th><th>Ghi chú</th><th></th>' +
+                  '</tr></thead><tbody id="nx-' + kind + '-tbody"></tbody></table></div>';
+              }
+            
+              function tonAgg(){
+                var agg = {};
+                function acc(e, sign){
+                  var k = (e.hang || "(chưa tên)") + "|" + (e.dvi || "");
+                  if (!agg[k]) agg[k] = { hang: e.hang || "(chưa tên)", dvi: e.dvi || "", nhap: 0, xuat: 0 };
+                  if (sign > 0) agg[k].nhap += num(e.sl); else agg[k].xuat += num(e.sl);
+                }
+                NX.nhap.forEach(function(e){ acc(e, 1); });
+                NX.xuat.forEach(function(e){ acc(e, -1); });
+                return Object.keys(agg).map(function(k){ var a = agg[k]; a.ton = a.nhap - a.xuat; return a; })
+                  .sort(function(a, b){ return b.ton - a.ton; });
+              }
+              function renderTon(){
+                var tb = $("#nx-ton-body"); if (!tb) return;
+                var list = tonAgg();
+                tb.innerHTML = list.length ? list.map(function(a){
+                  return '<tr><td class="nx-wrap"><b>' + escH(a.hang) + '</b></td><td class="c">' + escH(a.dvi) + '</td>' +
+                    '<td class="c">' + nfN(a.nhap) + '</td><td class="c">' + nfN(a.xuat) + '</td>' +
+                    '<td class="c"><b class="' + (a.ton < 0 ? "nx-ton-neg" : "nx-ton-num") + '">' + nfN(a.ton) + '</b></td></tr>';
+                }).join("") : '<tr><td colspan="5" style="text-align:center">Chưa có phiếu nhập/xuất nào — thêm ở 2 khu vực bên dưới.</td></tr>';
+                var sm = $("#nx-ton-sum");
+                if (sm) {
+                  var tn = list.reduce(function(x, a){ return x + a.nhap; }, 0), tx = list.reduce(function(x, a){ return x + a.xuat; }, 0);
+                  sm.innerHTML = list.length ? ("🏭 Trong kho hiện có <b>" + list.length + "</b> loại hàng · tổng đã nhập <b>" + nfN(tn) + "</b> · tổng đã xuất <b>" + nfN(tx) + "</b>") : "";
+                }
+              }
+              function moneyAgg(ngayKey){
+                var thu = 0, chi = 0;
+                NX.xuat.forEach(function(e){ if (!ngayKey || e.ngay === ngayKey) thu += num(e.tien); });
+                NX.nhap.forEach(function(e){ if (!ngayKey || e.ngay === ngayKey) chi += num(e.tien); });
+                return { thu: thu, chi: chi, con: thu - chi };
+              }
+              function moneyBoxes(x){
+                return '<div class="nx-mbox thu"><div class="nx-m-lb">💵 Thu (xuất hàng)</div><div class="nx-m-v">' + vndN(x.thu) + '</div></div>' +
+                  '<div class="nx-mbox chi"><div class="nx-m-lb">🧾 Chi (nhập hàng)</div><div class="nx-m-v">' + vndN(x.chi) + '</div></div>' +
+                  '<div class="nx-mbox con' + (x.con < 0 ? " neg" : "") + '"><div class="nx-m-lb">🏦 Còn lại (Thu − Chi)</div><div class="nx-m-v">' + vndN(x.con) + '</div></div>';
+              }
+              function renderMoney(){
+                var el = $("#nx-money"); if (!el) return;
+                el.innerHTML = '<div class="nx-mrow-l">📅 Hôm nay (' + escH(dmy(todayIso())) + ')</div><div class="nx-money">' + moneyBoxes(moneyAgg(todayIso())) + '</div>' +
+                  '<div class="nx-mrow-l">📚 Tất cả từ trước đến nay</div><div class="nx-money">' + moneyBoxes(moneyAgg(null)) + '</div>';
+              }
+              function renderList(kind){
+                var K = KIND[kind], tb = $("#nx-" + kind + "-tbody"); if (!tb) return;
+                var q = normS(($("#nx-" + kind + "-q") || {}).value || "");
+                var rows = NX[K.key].filter(function(e){
+                  return !q || normS([e.hang, e.giao, e.nhan, e.ghi, dmy(e.ngay)].join(" ")).indexOf(q) >= 0;
+                }).sort(function(a, b){ return String(b.ngay).localeCompare(String(a.ngay)) || (b.t || 0) - (a.t || 0); });
+                var tSl = rows.reduce(function(a, e){ return a + num(e.sl); }, 0);
+                var tTien = rows.reduce(function(a, e){ return a + num(e.tien); }, 0);
+                var sum = $("#nx-" + kind + "-sum");
+                if (sum) sum.innerHTML = K.icon + " Tổng " + K.verb + ": <b>" + rows.length + "</b> phiếu · Số lượng <b>" + nfN(tSl) + "</b> · Thành tiền <b>" + vndN(tTien) + "</b>";
+                tb.innerHTML = rows.length ? rows.slice(0, 200).map(function(e){
+                  return '<tr><td class="nowrap">' + escH(dmy(e.ngay)) + '</td><td class="nx-wrap"><b>' + escH(e.hang) + '</b></td>' +
+                    '<td class="c"><b>' + nfN(e.sl) + '</b></td><td class="c">' + escH(e.dvi) + '</td>' +
+                    '<td class="num">' + nfN(e.gia) + '</td><td class="num"><b>' + nfN(e.tien) + '</b></td>' +
+                    '<td>' + escH(e.giao) + '</td><td>' + escH(e.nhan) + '</td><td class="nx-wrap">' + escH(e.ghi || "") + '</td>' +
+                    '<td><button type="button" class="btn ghost" data-nx-del="' + kind + ':' + e.id + '" title="Xoá phiếu">🗑</button></td></tr>';
+                }).join("") : '<tr><td colspan="10" style="text-align:center">Chưa có phiếu ' + K.verb + ' nào.</td></tr>';
+              }
+              function renderForms(){
+                ["in", "out"].forEach(function(kind){
+                  var box = $("#nx-" + kind);
+                  if (box) box.innerHTML = formHtml(kind);
+                });
+              }
+              function renderNx(){ renderForms(); renderList("in"); renderList("out"); renderTon(); renderMoney(); }
+            
+              function nxPush(key, e){
+                e.id = e.id || ("x" + Date.now() + Math.floor(Math.random() * 1e4));
+                e.t = Date.now();
+                NX[key].push(e); saveNx();
+                return e;
+              }
+              function pickBen(kind, field){
+                var sel = $("#nx-" + kind + "-" + field); if (!sel) return "";
+                if (sel.value === "__new__") {
+                  var t = String(($("#nx-" + kind + "-" + field + "new") || {}).value || "").trim();
+                  if (t && NX.ben.indexOf(t) < 0) { NX.ben.push(t); saveNx(); }
+                  return t;
+                }
+                return sel.value || "";
+              }
+              function addFromForm(kind){
+                var K = KIND[kind];
+                var hangSel = $("#nx-" + kind + "-hang");
+                var hang = "";
+                if (hangSel) {
+                  if (hangSel.value === "__new__") {
+                    hang = String(($("#nx-" + kind + "-hangnew") || {}).value || "").trim();
+                    if (hang && !NX.hang.some(function(h){ return h === hang; })) { NX.hang.push(hang); saveNx(); }
+                  } else {
+                    var op = hangSel.options ? hangSel.options[hangSel.selectedIndex] : null;
+                    hang = op ? String(op.textContent || op.text || hangSel.value || "") : (hangSel.value || "");
+                  }
+                }
+                var sl = num(($("#nx-" + kind + "-sl") || {}).value);
+                if (!hang) { if (typeof toast === "function") toast("Chưa chọn/nhập tên hàng", "bad"); return null; }
+                if (!(sl > 0)) { if (typeof toast === "function") toast("Số lượng phải lớn hơn 0", "bad"); return null; }
+                var e = {
+                  ngay: ($("#nx-" + kind + "-ngay") || {}).value || todayIso(),
+                  hang: hang, sl: sl,
+                  dvi: ($("#nx-" + kind + "-dvi") || {}).value || "Bình",
+                  gia: numIn(($("#nx-" + kind + "-gia") || {}).value),
+                  tien: numIn(($("#nx-" + kind + "-tien") || {}).value),
+                  giao: pickBen(kind, "giao"), nhan: pickBen(kind, "nhan"),
+                  ghi: String(($("#nx-" + kind + "-ghi") || {}).value || "").trim()
+                };
+                nxPush(K.key, e);
+                renderNx();
+                if (typeof toast === "function") toast("✓ Đã thêm phiếu " + K.verb + ": " + e.hang + " × " + nfN(e.sl) + " " + e.dvi, "ok");
+                return e;
+              }
+              function nxDel(kind, id){
+                var K = KIND[kind];
+                NX[K.key] = NX[K.key].filter(function(e){ return e.id !== id; });
+                saveNx(); renderNx();
+              }
+            
+              function bindBox(kind){
+                var box = $("#nx-" + kind); if (!box) return;
+                box.addEventListener("click", function(ev){
+                  var t = ev.target, b = t && t.closest ? t.closest("[data-nx-add],[data-nx-del]") : null;
+                  if (!b) return;
+                  if (b.hasAttribute("data-nx-add")) gate(function(){ addFromForm(kind); });
+                  else {
+                    var parts = String(b.getAttribute("data-nx-del") || "").split(":");
+                    gate(function(){ nxDel(parts[0], parts.slice(1).join(":")); });
+                  }
+                });
+                box.addEventListener("change", function(ev){
+                  var el = ev.target; if (!el || !el.id) return;
+                  function toggle(selId, lbId){ if (el.id === selId) { var lb = document.getElementById(lbId); if (lb) lb.style.display = (el.value === "__new__") ? "flex" : "none"; } }
+                  toggle("nx-" + kind + "-hang", "nx-" + kind + "-hangnew-lb");
+                  toggle("nx-" + kind + "-giao", "nx-" + kind + "-giaonew-lb");
+                  toggle("nx-" + kind + "-nhan", "nx-" + kind + "-nhannew-lb");
+                  if (el.id === "nx-" + kind + "-hang" && el.value !== "__new__") {
+                    var op = el.options ? el.options[el.selectedIndex] : null;
+                    var g = op && op.getAttribute ? num(op.getAttribute("data-gia")) : 0;
+                    var giaEl = $("#nx-" + kind + "-gia");
+                    if (giaEl && g) { giaEl.value = nfN(g); calcTien(kind); }
+                  }
+                });
+                box.addEventListener("input", function(ev){
+                  var el = ev.target; if (!el || !el.id) return;
+                  if (el.id === "nx-" + kind + "-gia" || el.id === "nx-" + kind + "-tien") fmtMoneyEl(el);
+                  if (el.id === "nx-" + kind + "-sl" || el.id === "nx-" + kind + "-gia") calcTien(kind);
+                  if (el.id === "nx-" + kind + "-q") renderList(kind);
+                });
+              }
+              function calcTien(kind){
+                var sl = num(($("#nx-" + kind + "-sl") || {}).value), gia = numIn(($("#nx-" + kind + "-gia") || {}).value);
+                var tienEl = $("#nx-" + kind + "-tien");
+                if (tienEl) tienEl.value = (sl * gia) ? nfN(sl * gia) : "";
+              }
+            
+              function initNx(){
+                bindBox("in"); bindBox("out");
+                var btn = $("#nx-tab-btn");
+                if (btn) btn.addEventListener("click", function(){ setTimeout(renderNx, 0); });
+                renderNx();
+              }
+              window.LH_NX_SYNC = renderNx;
+              window.LH_NX = { render: renderNx, push: nxPush, addForm: addFromForm, del: nxDel, ton: tonAgg, money: moneyAgg, data: function(){ return NX; } };
+              initNx();
+            })();
+        </script>
+        <script id="lh-tc-js">
+            /* ===== patch38: tab Thu / Chi trong ngay — 2 the rieng: THE THU va THE CHI ===== */
+            (function(){
+              "use strict";
+              var LS_TC = "langha_thuchi_v1";
+              var TC = { items: [] };
+              try {
+                var raw0 = JSON.parse(localStorage.getItem(LS_TC) || "null");
+                if (raw0 && raw0.items) TC.items = raw0.items;
+              } catch(e){}
+              var $ = function(s){ return document.querySelector(s); };
+              function saveTc(){ try { localStorage.setItem(LS_TC, JSON.stringify(TC)); } catch(e){} }
+              function num(v){ var n = +v; return isFinite(n) ? n : 0; }
+              function numIn(v){ return num(String(v == null ? "" : v).replace(/[^\d]/g, "")); }
+              function escH(x){ return (typeof esc === "function") ? esc(x) : String(x == null ? "" : x); }
+              function nfN(x){ return (typeof nf === "function") ? nf(+x || 0) : String(+x || 0); }
+              function vndN(x){ return (typeof vnd === "function") ? vnd(+x || 0) : nfN(x) + " đ"; }
+              function pad(n){ return String(n).padStart(2, "0"); }
+              function todayIso(){ var d = new Date(); return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()); }
+              function nowHM(){ var d = new Date(); return pad(d.getHours()) + ":" + pad(d.getMinutes()); }
+              function dmy(iso){ var p = String(iso || "").split("-"); return (p.length === 3 && p[0].length === 4) ? p[2] + "/" + p[1] + "/" + p[0] : (iso || ""); }
+              function shiftDay(iso, delta){
+                var p = String(iso || todayIso()).split("-");
+                var d = new Date(+p[0] || 2026, (+p[1] || 1) - 1, +p[2] || 1);
+                d.setDate(d.getDate() + delta);
+                return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate());
+              }
+              function unlocked(){ try { return (typeof isUnlocked === "function") ? !!isUnlocked() : true; } catch(e){ return true; } }
+              function gate(go){ if (unlocked()) go(); else if (typeof askPassword === "function") askPassword(go); else go(); }
+            
+              var ND = {
+                thu: ["Bán hàng thu tiền", "Thu nợ khách hàng", "Thu tiền cọc vỏ", "Khách trả cọc / hoàn tiền", "Thu khác"],
+                chi: ["Nhập hàng", "Xăng xe / vận chuyển", "Lương nhân viên", "Thuê mặt bằng / kho", "Điện nước / internet", "Sửa xe / bảo dưỡng", "Ăn uống / tiếp khách", "Chi khác"]
+              };
+              var curDay = todayIso();
+            
+              function tcAgg(ngayKey, monthKey){
+                var thu = 0, chi = 0, n = 0;
+                TC.items.forEach(function(e){
+                  if (ngayKey && e.ngay !== ngayKey) return;
+                  if (monthKey && String(e.ngay || "").slice(0, 7) !== monthKey) return;
+                  if (e.loai === "thu") thu += num(e.tien); else chi += num(e.tien);
+                  n++;
+                });
+                return { thu: thu, chi: chi, con: thu - chi, n: n };
+              }
+              function moneyBoxes(x){
+                return '<div class="nx-mbox thu"><div class="nx-m-lb">💵 Tổng thu</div><div class="nx-m-v">' + vndN(x.thu) + '</div></div>' +
+                  '<div class="nx-mbox chi"><div class="nx-m-lb">🧾 Tổng chi</div><div class="nx-m-v">' + vndN(x.chi) + '</div></div>' +
+                  '<div class="nx-mbox con' + (x.con < 0 ? " neg" : "") + '"><div class="nx-m-lb">🏦 Còn lại (Thu − Chi)</div><div class="nx-m-v">' + vndN(x.con) + '</div></div>';
+              }
+            
+              function formHtmlTc(kind){
+                var isThu = kind === "thu";
+                function lb(t, inner){ return '<label class="tc-lb">' + t + inner + '</label>'; }
+                return '<div class="tc-form2">' +
+                  lb("📅 Ngày", '<input type="date" id="tc-' + kind + '-ngay" value="' + curDay + '">') +
+                  lb("📝 Nội dung", '<select id="tc-' + kind + '-nd">' + ND[kind].map(function(x){ return '<option value="' + escH(x) + '">' + escH(x) + '</option>'; }).join("") + '<option value="__new__">✍ Nội dung khác (tự nhập)…</option></select>') +
+                  '<label class="tc-lb tc-newrow" id="tc-' + kind + '-ndnew-lb">Nội dung tự nhập<input type="text" id="tc-' + kind + '-ndnew" placeholder="Nhập nội dung"></label>' +
+                  lb("💰 Số tiền (đ)", '<input type="text" inputmode="numeric" class="nx-money" id="tc-' + kind + '-tien" placeholder="0">') +
+                  lb(isThu ? "👤 Người nộp" : "👤 Người nhận", '<input type="text" id="tc-' + kind + '-nguoi" placeholder="Tên người ' + (isThu ? "nộp" : "nhận") + '">') +
+                  lb("🏦 Hình thức", '<select id="tc-' + kind + '-pt"><option>Tiền mặt</option><option>Chuyển khoản</option><option>Quẹt thẻ</option></select>') +
+                  lb("🗒 Ghi chú", '<input type="text" id="tc-' + kind + '-ghi" placeholder="Không bắt buộc">') +
+                  '</div>' +
+                  '<button type="button" class="btn" data-tc-add="' + kind + '">' + (isThu ? "➕ Thêm khoản THU" : "➕ Thêm khoản CHI") + '</button>' +
+                  '<span class="hint"> Thêm/xoá cần mở khoá.</span>' +
+                  '<p class="tc-sumline" id="tc-' + kind + '-sum"></p>' +
+                  '<div class="tw"><table class="nx-tbl tc-tbl"><colgroup><col style="width:56px"><col><col style="width:122px"><col style="width:120px"><col style="width:108px"><col style="width:130px"><col style="width:40px"></colgroup>' +
+                  '<thead><tr><th>Giờ</th><th>Nội dung</th><th class="num">Số tiền (đ)</th><th>' + (isThu ? "Người nộp" : "Người nhận") + '</th><th>Hình thức</th><th>Ghi chú</th><th></th></tr></thead>' +
+                  '<tbody id="tc-' + kind + '-tbody"></tbody></table></div>';
+              }
+              function renderCardList(kind){
+                var isThu = kind === "thu";
+                var tb = $("#tc-" + kind + "-tbody"); if (!tb) return;
+                var rows = TC.items.filter(function(e){ return e.ngay === curDay && e.loai === kind; })
+                  .sort(function(a, b){ return (b.t || 0) - (a.t || 0); });
+                var tot = rows.reduce(function(a, e){ return a + num(e.tien); }, 0);
+                var sum = $("#tc-" + kind + "-sum");
+                if (sum) sum.innerHTML = (isThu ? "💵 Tổng THU ngày " : "🧾 Tổng CHI ngày ") + escH(dmy(curDay)) + ": <b>" + vndN(tot) + "</b> · " + rows.length + " khoản";
+                tb.innerHTML = rows.length ? rows.map(function(e){
+                  return '<tr><td class="nowrap">' + escH(e.gio || "") + '</td>' +
+                    '<td class="nx-wrap"><b>' + escH(e.noidung) + '</b></td>' +
+                    '<td class="tc-amt ' + (isThu ? "tc-thu" : "tc-chi") + '">' + (isThu ? "+" : "−") + nfN(e.tien) + '</td>' +
+                    '<td>' + escH(e.nguoi || "") + '</td><td>' + escH(e.pt || "") + '</td><td class="nx-wrap">' + escH(e.ghi || "") + '</td>' +
+                    '<td><button type="button" class="btn ghost" data-tc-del="' + e.id + '" title="Xoá khoản">🗑</button></td></tr>';
+                }).join("") : '<tr><td colspan="7" style="text-align:center">Chưa có khoản ' + (isThu ? "thu" : "chi") + ' nào trong ngày này.</td></tr>';
+              }
+              function donThuAgg(dayIso, monLabel){
+                var sum = 0, seen = {}, n = 0;
+                function hit(ngayDmy, tien, px){
+                  if (dayIso && ngayDmy !== dmy(dayIso)) return;
+                  if (monLabel && String(ngayDmy || "").slice(3) !== monLabel) return;
+                  sum += (+tien || 0);
+                  if (px && !seen[px]) { seen[px] = 1; n++; }
+                }
+                try {
+                  (typeof PX !== "undefined" && PX ? PX : []).forEach(function(r){
+                    if (r._new) return;
+                    hit(r.ngay, r.ttSheet, r.px);
+                  });
+                } catch(e){}
+                try {
+                  (typeof ORD !== "undefined" && ORD ? ORD : []).forEach(function(o){
+                    hit(o.ngay, o.daThu, o.px);
+                  });
+                } catch(e){}
+                return { tien: sum, don: n };
+              }
+              function renderTc(){
+                var dEl = $("#tc-date"); if (dEl) dEl.value = curDay;
+                var title = $("#tc-day-title");
+                if (title) title.textContent = "📅 Ngày " + dmy(curDay) + (curDay === todayIso() ? " (hôm nay)" : "");
+                var dayAgg = tcAgg(curDay, null);
+                var don = donThuAgg(curDay, null);
+                var money = $("#tc-money");
+                if (money) money.innerHTML = moneyBoxes({ thu: dayAgg.thu + don.tien, chi: dayAgg.chi, con: dayAgg.thu + don.tien - dayAgg.chi, n: dayAgg.n });
+                var dEl2 = $("#tc-donthu");
+                if (dEl2) dEl2.innerHTML = '<div class="nx-mbox thu"><div class="nx-m-lb">🚚 Thu từ đơn hàng đã giao — đã cộng vào Tổng thu ở trên</div><div class="nx-m-v">' + vndN(don.tien) + '</div>' +
+                  '<div class="hint">Từ <b>' + don.don + '</b> đơn giao ngày ' + escH(dmy(curDay)) + ' · trong đó sổ thu tay: <b>' + vndN(dayAgg.thu) + '</b>. Số tự lấy từ ô “Đã thu tiền” của từng đơn (tab 📦 Lịch sử giao hàng) — đừng nhập trùng khoản này vào thẻ THU nữa.</div></div>';
+                var mk = String(curDay || "").slice(0, 7), mp = mk.split("-");
+                var mon = tcAgg(null, mk);
+                var ml = $("#tc-monthline");
+                if (ml) ml.innerHTML = "📚 Cả tháng " + (mp[1] || "") + "/" + (mp[0] || "") + ": Thu <b>" + vndN(mon.thu) + "</b> · Chi <b>" + vndN(mon.chi) + "</b> · Còn lại <b>" + vndN(mon.con) +  "</b> (" + mon.n + " khoản) · 🚚 Thu đơn giao trong tháng: <b>" + vndN(donThuAgg(null, (mp[1] || "") + "/" + (mp[0] || "")).tien) + "</b>";
+                var nx = $("#tc-nxref");
+                if (nx) {
+                  var txt = "";
+                  try {
+                    if (window.LH_NX && window.LH_NX.money) {
+                      var m = window.LH_NX.money(curDay);
+                      if (m && (m.thu || m.chi)) txt = "📥📤 Từ Nhập/Xuất hàng ngày này: Thu " + vndN(m.thu) + " · Chi " + vndN(m.chi) + " (chi tiết ở tab Nhập/Xuất hàng)";
+                    }
+                  } catch(e){}
+                  nx.textContent = txt;
+                }
+                ["thu", "chi"].forEach(function(kind){
+                  var fe = $("#tc-" + kind + "-ngay");
+                  if (fe) fe.value = curDay;
+                  renderCardList(kind);
+                });
+              }
+              function tcAdd(e){
+                e.id = e.id || ("t" + Date.now() + Math.floor(Math.random() * 1e4));
+                e.t = Date.now();
+                if (!e.gio) e.gio = nowHM();
+                TC.items.push(e); saveTc();
+                curDay = e.ngay || curDay;
+                renderTc();
+                return e;
+              }
+              function addFromForm(kind){
+                var ndSel = $("#tc-" + kind + "-nd");
+                var nd = "";
+                if (ndSel) {
+                  if (ndSel.value === "__new__") nd = String(($("#tc-" + kind + "-ndnew") || {}).value || "").trim();
+                  else nd = ndSel.value || "";
+                }
+                var tien = numIn(($("#tc-" + kind + "-tien") || {}).value);
+                if (!nd) { if (typeof toast === "function") toast("Chưa nhập nội dung khoản", "bad"); return null; }
+                if (!(tien > 0)) { if (typeof toast === "function") toast("Số tiền phải lớn hơn 0", "bad"); return null; }
+                var e = {
+                  ngay: ($("#tc-" + kind + "-ngay") || {}).value || curDay,
+                  loai: kind, noidung: nd, tien: tien,
+                  nguoi: String(($("#tc-" + kind + "-nguoi") || {}).value || "").trim(),
+                  pt: ($("#tc-" + kind + "-pt") || {}).value || "Tiền mặt",
+                  ghi: String(($("#tc-" + kind + "-ghi") || {}).value || "").trim()
+                };
+                tcAdd(e);
+                var tienEl = $("#tc-" + kind + "-tien"); if (tienEl) tienEl.value = "";
+                if (typeof toast === "function") toast("✓ Đã thêm khoản " + (kind === "thu" ? "THU" : "CHI") + ": " + nd + " · " + vndN(tien), "ok");
+                return e;
+              }
+              function tcDel(id){
+                TC.items = TC.items.filter(function(e){ return e.id !== id; });
+                saveTc(); renderTc();
+              }
+              function bindBox(kind){
+                var box = $("#tc-" + kind + "-box");
+                if (!box || box.dataset.bound) return;
+                box.dataset.bound = "1";
+                box.innerHTML = formHtmlTc(kind);
+                box.addEventListener("click", function(ev){
+                  var t = ev.target, b = t && t.closest ? t.closest("[data-tc-add],[data-tc-del]") : null;
+                  if (!b) return;
+                  if (b.hasAttribute("data-tc-add")) gate(function(){ addFromForm(kind); });
+                  else { var id = b.getAttribute("data-tc-del"); gate(function(){ tcDel(id); }); }
+                });
+                box.addEventListener("change", function(ev){
+                  var el = ev.target;
+                  if (el && el.id === "tc-" + kind + "-nd") {
+                    var lb = document.getElementById("tc-" + kind + "-ndnew-lb");
+                    if (lb) lb.style.display = (el.value === "__new__") ? "flex" : "none";
+                  }
+                });
+                box.addEventListener("input", function(ev){
+                  var el = ev.target;
+                  if (el && el.id === "tc-" + kind + "-tien") {
+                    var d = String(el.value || "").replace(/[^\d]/g, "");
+                    el.value = d ? nfN(num(d)) : "";
+                  }
+                });
+              }
+              function initTc(){
+                bindBox("thu"); bindBox("chi");
+                var dEl = $("#tc-date");
+                if (dEl) dEl.addEventListener("change", function(){ if (dEl.value) { curDay = dEl.value; renderTc(); } });
+                var pv = $("#tc-prev"); if (pv) pv.addEventListener("click", function(){ curDay = shiftDay(curDay, -1); renderTc(); });
+                var nx2 = $("#tc-next"); if (nx2) nx2.addEventListener("click", function(){ curDay = shiftDay(curDay, 1); renderTc(); });
+                var td = $("#tc-today"); if (td) td.addEventListener("click", function(){ curDay = todayIso(); renderTc(); });
+                var btn = $("#tc-tab-btn");
+                if (btn) btn.addEventListener("click", function(){ setTimeout(renderTc, 0); });
+                renderTc();
+              }
+              window.LH_TC_SYNC = renderTc;
+              window.LH_TC = { render: renderTc, add: tcAdd, addForm: addFromForm, del: tcDel, agg: tcAgg, donThu: donThuAgg, setDay: function(iso){ curDay = iso; renderTc(); }, data: function(){ return TC; } };
+              initTc();
+            })();
+        </script>
         <script>
-            (function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a4a2149d3fc3e2ef',t:'MTc5MTkzMzY4NQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();
+            (function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a4a761c7189f28ee',t:'MTc5MTk4OTI3NA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();
         </script>
     </body>
 
