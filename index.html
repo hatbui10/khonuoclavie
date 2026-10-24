@@ -784,6 +784,48 @@
             .bh-calc-keys button{min-height:46px;border:1px solid #c8cdd5;border-radius:9px;background:#fff;color:#1c2735;font:600 17px "Segoe UI",Arial,sans-serif;cursor:pointer;box-shadow:0 1px 1px rgba(0,0,0,.06)}
             .bh-calc-keys button:hover{background:#eaf0fa;border-color:#8ba7d3}.bh-calc-keys button:active{transform:translateY(1px)}
             .bh-calc-keys .op{background:#e6ecf6;color:#183d72}.bh-calc-keys .danger{background:#fde9e7;color:#a32a20}.bh-calc-keys .eq{background:#2f5597;color:#fff;border-color:#2f5597;font-size:21px}
+            #tab-banhang .bh-table{width:2080px;min-width:2080px}
+            #tab-banhang .bh-table col.c-invoice{width:125px}#tab-banhang .bh-table col.c-invoice-code{width:145px}
+            #tab-banhang .bh-table .bh-filter-row th{top:107px;height:35px;padding:3px;z-index:5;background:#e9eef5;color:#172235}
+            #tab-banhang .bh-table .bh-filter-row th.bh-rowid{z-index:12;background:#e2e8f0!important}
+            #tab-banhang .bh-col-filter{display:flex;align-items:center;justify-content:center;gap:3px;width:100%;min-width:0;height:25px;padding:2px 3px;border:1px solid #9aa9ba;border-radius:3px;background:#fff;color:#52657a;cursor:pointer;box-sizing:border-box}
+            #tab-banhang .bh-col-filter svg{width:11px;height:11px;flex:0 0 auto;fill:currentColor}
+            #tab-banhang .bh-col-filter span{font:12px/1 Arial,sans-serif;flex:0 0 auto}
+            #tab-banhang .bh-col-filter:hover{background:#edf5fd;border-color:#527fac;color:#244f7c}
+            #tab-banhang .bh-col-filter:focus-visible{outline:2px solid #6e9bd2;outline-offset:0}
+            #tab-banhang .bh-col-filter.is-open{outline:2px solid #6e9bd2;outline-offset:0}
+            #tab-banhang .bh-col-filter.is-active{background:#2f6faf;border-color:#245c94;color:#fff}
+            .bh-filter-pop{position:fixed;z-index:100000;display:flex;flex-direction:column;gap:8px;width:290px;max-height:min(500px,78vh);padding:11px;background:#fff;color:#172235;border:1px solid #91a2b5;border-radius:8px;box-shadow:0 16px 44px rgba(7,18,36,.3);font:13px/1.35 Arial,sans-serif;box-sizing:border-box}
+            .bh-filter-pop *{box-sizing:border-box}
+            .bh-filter-pop-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+            .bh-filter-pop-head b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px}
+            .bh-filter-pop-head span{flex:0 0 auto;color:#64748b;font-size:11px}
+            .bh-filter-pop .bh-filter-search{flex:0 0 32px;width:100%;min-width:0;height:32px;min-height:32px;max-height:32px;padding:5px 8px;border:1px solid #a9b6c5;border-radius:5px;background:#fff!important;color:#172235!important;font:13px Arial,sans-serif;line-height:normal;outline:none}
+            .bh-filter-pop .bh-filter-search:focus{border-color:#3977b7;box-shadow:0 0 0 2px #d8e9fa}
+            .bh-filter-pop .bh-filter-search::placeholder{color:#75869a}
+            @media(max-width:700px){.bh-filter-pop .bh-filter-search{flex-basis:48px;height:48px;max-height:48px}}
+            body.lhm-mode .bh-filter-pop .bh-filter-search{flex-basis:48px;height:48px;max-height:48px}
+            .bh-filter-all{display:flex;align-items:center;gap:8px;min-height:28px;padding:3px 5px;border-bottom:1px solid #dbe2ea;font-weight:700;cursor:pointer}
+            .bh-filter-pop input[type="checkbox"]{width:16px;height:16px;margin:0;accent-color:#2f6faf;cursor:pointer;flex:0 0 auto}
+            .bh-filter-values{min-height:38px;max-height:310px;overflow:auto;overscroll-behavior:contain;border:1px solid #d6dee7;border-radius:5px;background:#fff}
+            .bh-filter-value{display:flex;align-items:center;gap:8px;min-height:30px;padding:5px 7px;cursor:pointer;border-bottom:1px solid #edf1f5}
+            .bh-filter-value:last-child{border-bottom:0}
+            .bh-filter-value:hover{background:#edf5fd}
+            .bh-filter-value[hidden]{display:none!important}
+            .bh-filter-value span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+            .bh-filter-value.is-blank{color:#64748b;font-style:italic}
+            .bh-filter-pop-foot{display:flex;align-items:center;justify-content:space-between;gap:8px}
+            .bh-filter-chosen{color:#64748b;font-size:11px;white-space:nowrap}
+            .bh-filter-pop-actions{display:flex;gap:6px}
+            .bh-filter-pop-actions button{height:30px;padding:4px 11px;border:1px solid #aab6c4;border-radius:5px;background:#fff;color:#27384b;font:12px Arial,sans-serif;cursor:pointer}
+            .bh-filter-pop-actions button:hover{background:#edf2f7}
+            .bh-filter-pop-actions .primary{border-color:#2f6faf;background:#2f6faf;color:#fff;font-weight:700}
+            .bh-filter-pop-actions .primary:hover{background:#265f98}
+            #tab-banhang .bh-table td.bh-invoice-cell{padding:1px 3px;background:#fffdf3!important}
+            #tab-banhang .bh-inv-input{display:block;width:100%;min-width:0;height:21px;padding:1px 2px;border:1px dashed #b2a66d;border-radius:2px;background:transparent;color:#111;font:12px Calibri,Arial,sans-serif;box-sizing:border-box}
+            #tab-banhang .bh-inv-input::placeholder{color:#8b8b78;font-size:10.5px}
+            #tab-banhang .bh-inv-input:hover{background:#fff}
+            #tab-banhang .bh-inv-input:focus{outline:2px solid #6e9bd2;border-style:solid;background:#fff}
             @media(max-width:700px){
               #tab-banhang .bh-panel{padding:10px 8px 12px}#tab-banhang .bh-source{white-space:normal}
               #tab-banhang .bh-tools{display:grid;grid-template-columns:1fr 1fr}#tab-banhang .bh-tools input[type=search]{grid-column:1/-1;max-width:none;min-width:0;width:100%}
@@ -791,7 +833,7 @@
               #tab-banhang .bh-scroll{max-height:65dvh;min-height:330px}#tab-banhang .bh-foot{font-size:11px}
             }
             @media print{
-              body.bh-printing header,body.bh-printing main>.tab:not(#tab-banhang),body.bh-printing #lhHome,body.bh-printing #lhmNav,body.bh-printing .lh-sheet-head,body.bh-printing .bh-tools,body.bh-printing .bh-entry,body.bh-printing .bh-foot,body.bh-printing .bh-title .hint{display:none!important}
+              body.bh-printing header,body.bh-printing main>.tab:not(#tab-banhang),body.bh-printing #lhHome,body.bh-printing #lhmNav,body.bh-printing .lh-sheet-head,body.bh-printing .bh-tools,body.bh-printing .bh-filter-row,body.bh-printing .bh-filter-pop,body.bh-printing .bh-entry,body.bh-printing .bh-foot,body.bh-printing .bh-title .hint{display:none!important}
               body.bh-printing main,body.bh-printing #tab-banhang{display:block!important;max-width:none!important;padding:0!important;margin:0!important;position:static!important;overflow:visible!important;background:#fff!important}
               body.bh-printing #tab-banhang .bh-panel{border:0;box-shadow:none;padding:0}body.bh-printing #tab-banhang .bh-scroll{max-height:none;overflow:visible}
               body.bh-printing #tab-banhang .bh-table{font-size:8px;width:100%;min-width:0}body.bh-printing #tab-banhang .bh-table th,body.bh-printing #tab-banhang .bh-table td{position:static!important;padding:1px 2px;height:15px}
@@ -1131,7 +1173,7 @@
                     <div class="bh-title">
                         <div>
                             <h2>📋 Sổ bán hàng — Tháng 9/2026</h2>
-                            <p class="hint">Bố cục và màu sắc theo sổ Excel gốc · bấm tiêu đề cột để sắp xếp · cuộn ngang để xem đủ cột.</p>
+                            <p class="hint">Bố cục theo sổ Excel · bấm nút lọc dưới mỗi cột để chọn checkbox · Hoá đơn nhập tay: phiếu gốc lưu máy này, đơn mới đồng bộ Firebase.</p>
                         </div>
                         <span class="bh-source">Nguồn: LangHa T 9 - 2026 · <b>777 phiếu gốc</b></span>
                     </div>
@@ -1158,7 +1200,7 @@
                                     <col class="c-row"><col class="c-px"><col class="c-date"><col class="c-code"><col class="c-product"><col class="c-unit">
                                     <col class="c-sl"><col class="c-price"><col class="c-small"><col class="c-small"><col class="c-money">
                                     <col class="c-vo"><col class="c-vo"><col class="c-namevo"><col class="c-small"><col class="c-money"><col class="c-nv">
-                                    <col class="c-address"><col class="c-phone"><col class="c-small"><col class="c-small"><col class="c-small">
+                                    <col class="c-address"><col class="c-phone"><col class="c-small"><col class="c-small"><col class="c-small"><col class="c-invoice"><col class="c-invoice-code">
                                 </colgroup>
                                 <thead>
                                     <tr class="bh-totals">
@@ -1174,7 +1216,7 @@
                                         <th class="bh-navy" id="bh-total-notien">0</th>
                                         <th></th>
                                         <th class="bh-action" colspan="2"><button type="button" id="bh-open-search">Tìm kiếm và nhập liệu khách hàng</button></th>
-                                        <th class="bh-action" colspan="3"><button type="button" id="bh-calc-open">Máy tính Casio</button></th>
+                                        <th class="bh-action" colspan="3"><button type="button" id="bh-calc-open">Máy tính Casio</button></th><th colspan="2"></th>
                                     </tr>
                                     <tr class="bh-head">
                                         <th class="bh-rowid">10</th>
@@ -1198,6 +1240,8 @@
                                         <th rowspan="2" class="bh-yellow" data-sort="daily">Đại Lý</th>
                                         <th rowspan="2" class="bh-yellow" data-sort="quanly">Quản lý</th>
                                         <th rowspan="2" class="bh-yellow" data-sort="nvkd">NVKD</th>
+                                        <th rowspan="2" data-sort="hoaDon">Hoá đơn</th>
+                                        <th rowspan="2" data-sort="maHoaDon">Mã hoá đơn</th>
                                     </tr>
                                     <tr class="bh-sub">
                                         <th class="bh-rowid">11</th>
@@ -4479,12 +4523,17 @@
           };
           const cellNum = (v, blank) => (blank && (v == null || v === "")) ? "" : fmt.format(num(v));
           const dateKey = v => { const p=String(v||"").split("/"); return Date.UTC(+p[2]||1970,(+p[1]||1)-1,+p[0]||1); };
-          const state = {loaded:false, dirty:true, sort:"px", dir:1, view:[], base:[]};
+          const state = {loaded:false, dirty:true, sort:"px", dir:1, view:[], base:[], colFilters:{}};
+          const LS_INVOICE = "langha_hoadon_v1";
+          let INVOICE = {};
+          try { INVOICE = JSON.parse(localStorage.getItem(LS_INVOICE) || "{}") || {}; } catch(e) { INVOICE = {}; }
 
           function readRows(){
             if(typeof PX === "undefined") return [];
             return PX.map((p,i) => {
-              const ex = EXTRA[p.px] || {};
+              const ex = EXTRA[p.px] || {}, iv = INVOICE[p.px] || {};
+              const od = p._new && typeof ORD !== "undefined" ? (ORD.find(o => o._id === p._oid) || null) : null;
+              const inv = k => od && Object.prototype.hasOwnProperty.call(od,k) ? String(od[k] || "") : String(iv[k] || "");
               const m = String(p.px||"").match(/(\d+)$/);
               const r = {
                 row:m ? (+m[1]+11) : i+12, px:p.px||"", ngay:p.ngay||"", hang:p.hang||"", ten:p.hangFull||p.hang||"",
@@ -4492,12 +4541,119 @@
                 tracuoc:ex.tc == null ? null : ex.tc, tt:num(p.ttSheet), vodung:num(p.voThu),
                 vokhac:ex.vk == null ? null : ex.vk, tenvo:ex.tv||"", novo:ex.nv == null ? (p.noVo == null ? null : p.noVo) : ex.nv,
                 notien:num(p.noTien), nvgiao:p.nv||"", diachi:p.dia||"", sdt:p.sdt||"", daily:ex.dl||"",
-                quanly:ex.ql||"", nvkd:ex.th == null ? null : ex.th, isNew:!!p._new
+                quanly:ex.ql||"", nvkd:ex.th == null ? null : ex.th, hoaDon:inv("hoaDon"), maHoaDon:inv("maHoaDon"), isNew:!!p._new, oid:p._oid||""
               };
-              r._s = norm([r.px,r.ngay,r.hang,r.ten,r.dvi,r.nvgiao,r.diachi,r.sdt,r.daily,r.quanly,r.tenvo].join(" "));
+              r._s = norm([r.px,r.ngay,r.hang,r.ten,r.dvi,r.nvgiao,r.diachi,r.sdt,r.daily,r.quanly,r.tenvo,r.hoaDon,r.maHoaDon].join(" "));
               return r;
             });
           }
+
+          const FILTER_COLS = [["row","Dòng Excel"],["px","Mã Phiếu"],["ngay","Ngày Tháng"],["hang","Mã Hàng"],["ten","Tên Hàng Hóa"],["dvi","Đơn Vị"],["sl","SL Giao"],["gia","Đơn Giá"],["vocuoc","Vỏ Cược"],["tracuoc","Trả Cược"],["tt","Thành Tiền"],["vodung","Vỏ Thu Đúng"],["vokhac","Vỏ Thu Khác"],["tenvo","Tên vỏ thu"],["novo","Nợ Vỏ"],["notien","Nợ Tiền"],["nvgiao","NV Giao"],["diachi","Địa chỉ giao"],["sdt","Điện Thoại"],["daily","Đại Lý"],["quanly","Quản lý"],["nvkd","NVKD"],["hoaDon","Hoá đơn"],["maHoaDon","Mã hoá đơn"]];
+          function buildColumnFilters(){
+            if(document.querySelector("#tab-banhang .bh-filter-row")) return;
+            const tr=document.createElement("tr"); tr.className="bh-filter-row";
+            tr.innerHTML=FILTER_COLS.map(c=>'<th'+(c[0]==="row"?' class="bh-rowid"':'')+'><button type="button" class="bh-col-filter" data-bh-filter="'+c[0]+'" data-label="'+esc(c[1])+'" aria-label="Lọc cột '+esc(c[1])+'" aria-haspopup="dialog" aria-expanded="false" title="Lọc cột '+esc(c[1])+' bằng checkbox"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M1 1.5h10L7 6v4H5V6L1 1.5z"/></svg><span>▾</span></button></th>').join("");
+            document.querySelector("#tab-banhang .bh-table thead").appendChild(tr);
+          }
+          const filterValueKey=v=>(v==null||v==="")?"blank":(typeof v==="number"?"num:":"str:")+(typeof v==="string"?v.normalize("NFC"):String(v));
+          const filterValueLabel=v=>(v==null||v==="")?"(Trống)":(typeof v==="number"?fmt.format(v):String(v).normalize("NFC"));
+          function hasColumnFilters(){ return Object.keys(state.colFilters).length>0; }
+          function matchColumn(r,k,selected){
+            if(!Array.isArray(selected)) return true;
+            return selected.indexOf(filterValueKey(r[k]))>=0;
+          }
+          function columnFilterValues(k){
+            const map=new Map();
+            state.base.forEach(r=>{const key=filterValueKey(r[k]);if(!map.has(key))map.set(key,{key:key,value:r[k],label:filterValueLabel(r[k])});});
+            return Array.from(map.values()).sort((a,b)=>{
+              const ae=a.value==null||a.value==="",be=b.value==null||b.value==="";
+              if(ae||be)return ae===be?0:(ae?1:-1);
+              if(k==="ngay")return dateKey(a.value)-dateKey(b.value);
+              if(typeof a.value==="number"&&typeof b.value==="number")return a.value-b.value;
+              return a.label.localeCompare(b.label,"vi",{numeric:true,sensitivity:"base"});
+            });
+          }
+          function updateFilterButtons(){
+            document.querySelectorAll("#tab-banhang .bh-col-filter").forEach(btn=>{
+              const k=btn.getAttribute("data-bh-filter"),active=Object.prototype.hasOwnProperty.call(state.colFilters,k);
+              btn.classList.toggle("is-active",active);
+              btn.title=active?"Đang lọc cột "+btn.getAttribute("data-label")+" · bấm để sửa":"Lọc cột "+btn.getAttribute("data-label")+" bằng checkbox";
+            });
+          }
+          let filterPopup=null,filterButton=null;
+          function closeColumnFilter(){
+            if(filterPopup){filterPopup.remove();filterPopup=null;}
+            if(filterButton){filterButton.setAttribute("aria-expanded","false");filterButton.classList.remove("is-open");filterButton=null;}
+          }
+          function positionColumnFilter(){
+            if(!filterPopup||!filterButton)return;
+            if(!filterButton.isConnected){closeColumnFilter();return;}
+            const rect=filterButton.getBoundingClientRect(),pop=filterPopup;
+            if(rect.bottom<0||rect.top>window.innerHeight||rect.right<0||rect.left>window.innerWidth){closeColumnFilter();return;}
+            const width=Math.min(290,window.innerWidth-12);pop.style.width=width+"px";
+            let left=Math.max(6,Math.min(rect.left,window.innerWidth-width-6)),top=rect.bottom+4;
+            if(top+pop.offsetHeight>window.innerHeight-6)top=Math.max(6,rect.top-pop.offsetHeight-4);
+            pop.style.left=left+"px";pop.style.top=top+"px";
+          }
+          function openColumnFilter(btn){
+            closeColumnFilter();
+            if(state.dirty)rebuild();
+            const k=btn.getAttribute("data-bh-filter"),label=btn.getAttribute("data-label")||k;
+            const values=columnFilterValues(k),active=Object.prototype.hasOwnProperty.call(state.colFilters,k);
+            const selected=new Set(active&&Array.isArray(state.colFilters[k])?state.colFilters[k]:values.map(v=>v.key));
+            filterButton=btn;btn.setAttribute("aria-expanded","true");btn.classList.add("is-open");
+            const pop=document.createElement("div");pop.className="bh-filter-pop";pop.id="bh-filter-pop";pop.setAttribute("role","dialog");pop.setAttribute("aria-label","Lọc cột "+label);
+            pop.innerHTML='<div class="bh-filter-pop-head"><b>'+esc(label)+'</b><span>'+fmt.format(values.length)+' giá trị</span></div>'+
+              '<input type="search" class="bh-filter-search" placeholder="Tìm trong danh sách…" aria-label="Tìm giá trị trong cột '+esc(label)+'">'+
+              '<label class="bh-filter-all"><input type="checkbox"><span>Chọn tất cả</span></label>'+
+              '<div class="bh-filter-values">'+values.map(v=>'<label class="bh-filter-value'+(v.key==="blank"?' is-blank':'')+'" data-search="'+esc(norm(v.label))+'" title="'+esc(v.label)+'"><input type="checkbox" value="'+esc(v.key)+'"'+(selected.has(v.key)?' checked':'')+'><span>'+esc(v.label)+'</span></label>').join("")+'</div>'+
+              '<div class="bh-filter-pop-foot"><span class="bh-filter-chosen"></span><div class="bh-filter-pop-actions"><button type="button" data-filter-action="cancel">Huỷ</button><button type="button" class="primary" data-filter-action="apply">Áp dụng</button></div></div>';
+            document.body.appendChild(pop);filterPopup=pop;
+            positionColumnFilter();
+            const all=pop.querySelector(".bh-filter-all input"),boxes=()=>Array.from(pop.querySelectorAll(".bh-filter-value input"));
+            const syncAll=()=>{
+              const bs=boxes(),n=bs.filter(x=>x.checked).length;
+              all.checked=bs.length>0&&n===bs.length;all.indeterminate=n>0&&n<bs.length;
+              pop.querySelector(".bh-filter-chosen").textContent="Đã chọn "+fmt.format(n)+"/"+fmt.format(bs.length);
+            };
+            all.addEventListener("change",()=>{boxes().forEach(x=>x.checked=all.checked);syncAll();});
+            pop.querySelector(".bh-filter-values").addEventListener("change",syncAll);
+            pop.querySelector(".bh-filter-search").addEventListener("input",e=>{
+              const q=norm(e.target.value.trim());
+              pop.querySelectorAll(".bh-filter-value").forEach(row=>{row.hidden=!!q&&row.getAttribute("data-search").indexOf(q)<0;});
+            });
+            pop.querySelector('[data-filter-action="cancel"]').addEventListener("click",()=>{const b=filterButton;closeColumnFilter();if(b&&b.isConnected)b.focus({preventScroll:true});});
+            pop.querySelector('[data-filter-action="apply"]').addEventListener("click",()=>{
+              const keys=boxes().filter(x=>x.checked).map(x=>x.value),b=filterButton;
+              if(keys.length===values.length)delete state.colFilters[k];else state.colFilters[k]=keys;
+              closeColumnFilter();render("top");if(b&&b.isConnected)b.focus({preventScroll:true});
+            });
+            syncAll();
+          }
+
+          function saveInvoice(el){
+            const px=el.getAttribute("data-px")||"", oid=el.getAttribute("data-oid")||"", field=el.getAttribute("data-inv-field")||"";
+            if(!px || (field!=="hoaDon"&&field!=="maHoaDon")) return;
+            const value=el.value.trim();
+            if(oid){
+              const o=(typeof ORD!=="undefined"?ORD:[]).find(x=>x._id===oid);
+              if(!o){toastMsg("Không tìm thấy đơn để lưu hoá đơn");return;}
+              if(String(o[field]||"")!==value){
+                o[field]=value;o.t=Date.now();try{o.dev=deviceName();}catch(e){}
+                try{saveOrders();bumpRev();saveEdit();updateCloud();}catch(e){}
+                toastMsg("✓ Đã lưu "+(field==="hoaDon"?"hoá đơn":"mã hoá đơn")+" "+px+" và đồng bộ");
+              }
+            }else{
+              const cur=INVOICE[px]||{};
+              if(String(cur[field]||"")!==value){
+                INVOICE[px]=Object.assign({},cur,{t:Date.now()});INVOICE[px][field]=value;
+                try{localStorage.setItem(LS_INVOICE,JSON.stringify(INVOICE));}catch(e){}
+                toastMsg("✓ Đã lưu "+(field==="hoaDon"?"hoá đơn":"mã hoá đơn")+" "+px+" trên máy này");
+              }
+            }
+            state.dirty=true;setTimeout(()=>render("keep"),0);
+          }
+
           function fillSelect(id, values, label){
             const el=$(id), old=el.value;
             el.innerHTML='<option value="">'+esc(label)+'</option>'+values.map(v=>'<option value="'+esc(v)+'">'+esc(v||"(trống)")+'</option>').join("");
@@ -4513,7 +4669,8 @@
           function filtered(){
             const q=norm($("bh-q").value.trim()), d=$("bh-date").value, h=$("bh-hang").value, nv=$("bh-nv").value;
             const terms=q.split(/\s+/).filter(Boolean);
-            const rows=state.base.filter(r => (!d||r.ngay===d) && (!h||r.hang===h) && (!nv||r.nvgiao===nv) && terms.every(t=>r._s.indexOf(t)>=0));
+            const rows=state.base.filter(r => (!d||r.ngay===d) && (!h||r.hang===h) && (!nv||r.nvgiao===nv) && terms.every(t=>r._s.indexOf(t)>=0) &&
+              Object.keys(state.colFilters).every(k=>matchColumn(r,k,state.colFilters[k])));
             const key=state.sort, dir=state.dir;
             const numeric={sl:1,gia:1,vocuoc:1,tracuoc:1,tt:1,vodung:1,vokhac:1,novo:1,notien:1,nvkd:1,row:1};
             rows.sort((a,b)=>{
@@ -4549,7 +4706,9 @@
               '<td'+title(r.sdt)+'>'+txt(r.sdt)+'</td>'+
               '<td class="bh-center'+(r.daily?' bh-fill-yellow':'')+'">'+txt(r.daily)+'</td>'+
               '<td class="bh-center'+(r.quanly?' bh-fill-yellow':'')+'">'+txt(r.quanly)+'</td>'+
-              nc(r.nvkd,r.nvkd!=null?'bh-fill-yellow':'',true)+'</tr>';
+              nc(r.nvkd,r.nvkd!=null?'bh-fill-yellow':'',true)+
+              '<td class="bh-invoice-cell"><input class="bh-inv-input" data-inv-field="hoaDon" data-px="'+txt(r.px)+'" data-oid="'+txt(r.oid)+'" value="'+txt(r.hoaDon)+'" placeholder="Nhập…" title="'+esc(r.isNew?'Đơn mới: lưu và đồng bộ Firebase':'Phiếu gốc: lưu trên máy này')+'"></td>'+
+              '<td class="bh-invoice-cell"><input class="bh-inv-input" data-inv-field="maHoaDon" data-px="'+txt(r.px)+'" data-oid="'+txt(r.oid)+'" value="'+txt(r.maHoaDon)+'" placeholder="Nhập…" title="'+esc(r.isNew?'Đơn mới: lưu và đồng bộ Firebase':'Phiếu gốc: lưu trên máy này')+'"></td></tr>';
           }
           function render(scrollMode){
             if(state.dirty) rebuild();
@@ -4562,11 +4721,11 @@
             $("bh-total-vokhac").textContent=fmt.format(sum("vokhac"));
             $("bh-total-novo").textContent=fmt.format(sum("novo"));
             $("bh-total-notien").textContent=fmt.format(sum("notien"));
-            const noFilter=!$("bh-q").value.trim()&&!$("bh-date").value&&!$("bh-hang").value&&!$("bh-nv").value;
+            const noFilter=!$("bh-q").value.trim()&&!$("bh-date").value&&!$("bh-hang").value&&!$("bh-nv").value&&!hasColumnFilters();
             $("bh-total-check").textContent=noFilter?"-2":"—";
             $("bh-count").textContent=fmt.format(rows.length)+" dòng · "+fmt.format(sum("sl"))+" bình/kiện";
-            $("bh-body").innerHTML=rows.length?rows.map(rowHtml).join(""):'<tr><td class="bh-rowid">—</td><td colspan="21" style="text-align:center;padding:24px">Không có phiếu nào khớp bộ lọc.</td></tr>';
-            state.loaded=true;
+            $("bh-body").innerHTML=rows.length?rows.map(rowHtml).join(""):'<tr><td class="bh-rowid">—</td><td colspan="23" style="text-align:center;padding:24px">Không có phiếu nào khớp bộ lọc.</td></tr>';
+            updateFilterButtons();state.loaded=true;
             requestAnimationFrame(()=>{
               if(scrollMode==="bottom") sc.scrollTop=sc.scrollHeight;
               else if(scrollMode==="top") sc.scrollTop=0;
@@ -4581,15 +4740,37 @@
             try{if(typeof toast==="function"){toast(msg,"ok");return;}}catch(e){}
           }
           function wire(){
+            buildColumnFilters();
+            document.querySelector("#tab-banhang .bh-filter-row").addEventListener("click",e=>{
+              const el=e.target.closest("[data-bh-filter]");if(!el)return;
+              if(filterButton===el)closeColumnFilter();else openColumnFilter(el);
+            });
+            document.addEventListener("pointerdown",e=>{
+              if(!filterPopup)return;
+              if(filterPopup.contains(e.target)||(filterButton&&filterButton.contains(e.target)))return;
+              closeColumnFilter();
+            },true);
+            document.addEventListener("keydown",e=>{
+              if(e.key==="Escape"&&filterPopup){e.preventDefault();const b=filterButton;closeColumnFilter();if(b&&b.isConnected)b.focus({preventScroll:true});}
+            });
+            document.addEventListener("scroll",e=>{if(filterPopup&&!filterPopup.contains(e.target))positionColumnFilter();},true);
+            window.addEventListener("resize",()=>{if(filterPopup)positionColumnFilter();});
             ["bh-q","bh-date","bh-hang","bh-nv"].forEach(id=>{
               $(id).addEventListener(id==="bh-q"?"input":"change",()=>render("top"));
             });
             $("bh-reset").addEventListener("click",()=>{
-              $("bh-q").value="";$("bh-date").value="";$("bh-hang").value="";$("bh-nv").value="";render("top");
+              $("bh-q").value="";$("bh-date").value="";$("bh-hang").value="";$("bh-nv").value="";
+              state.colFilters={};closeColumnFilter();render("top");
             });
             $("bh-table").querySelector("thead").addEventListener("click",e=>{
               const th=e.target.closest("th[data-sort]");if(!th)return;
               const k=th.dataset.sort;if(state.sort===k)state.dir*=-1;else{state.sort=k;state.dir=1;}render("keep");
+            });
+            $("bh-body").addEventListener("change",e=>{
+              const el=e.target.closest("[data-inv-field]");if(el)saveInvoice(el);
+            });
+            $("bh-body").addEventListener("keydown",e=>{
+              const el=e.target.closest("[data-inv-field]");if(el&&e.key==="Enter"){e.preventDefault();setTimeout(()=>{if(el.isConnected)el.blur();},0);}
             });
             $("bh-open-search").addEventListener("click",()=>{
               const p=$("bh-entry");p.hidden=!p.hidden;$("bh-q").focus();$("bh-q").select();
@@ -4608,8 +4789,8 @@
             });
           }
           function exportCsv(){
-            const head=["Dòng Excel","Mã Phiếu","Ngày Tháng","Mã Hàng","Tên Hàng Hóa","Đơn Vị","SL Giao","Đơn Giá","Vỏ Cược","Trả Cược","Thành Tiền","Vỏ Thu Đúng","Vỏ Thu Khác","Tên vỏ thu","Nợ Vỏ","Nợ Tiền","NV Giao","Địa chỉ giao","Điện Thoại","Đại Lý","Quản lý","NVKD"];
-            const keys=["row","px","ngay","hang","ten","dvi","sl","gia","vocuoc","tracuoc","tt","vodung","vokhac","tenvo","novo","notien","nvgiao","diachi","sdt","daily","quanly","nvkd"];
+            const head=["Dòng Excel","Mã Phiếu","Ngày Tháng","Mã Hàng","Tên Hàng Hóa","Đơn Vị","SL Giao","Đơn Giá","Vỏ Cược","Trả Cược","Thành Tiền","Vỏ Thu Đúng","Vỏ Thu Khác","Tên vỏ thu","Nợ Vỏ","Nợ Tiền","NV Giao","Địa chỉ giao","Điện Thoại","Đại Lý","Quản lý","NVKD","Hoá đơn","Mã hoá đơn"];
+            const keys=["row","px","ngay","hang","ten","dvi","sl","gia","vocuoc","tracuoc","tt","vodung","vokhac","tenvo","novo","notien","nvgiao","diachi","sdt","daily","quanly","nvkd","hoaDon","maHoaDon"];
             const quote=v=>{const s=String(v==null?"":v);return /[",\r\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s};
             const csv="\ufeff"+[head].concat(state.view.map(r=>keys.map(k=>r[k]))).map(r=>r.map(quote).join(",")).join("\r\n");
             const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"}));a.download="SoBanHang_LangHa_T9-2026.csv";document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
@@ -10019,6 +10200,6 @@ body.in-land #in-overlay .inp-thanks{display:none}
 })();
 
         </script>
-<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a4df0d77ce85079d',t:'MTc5MjU3MzAyMw=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a4f1dde4dbf504e9',t:'MTc5Mjc3MDMwNA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a4df0d77ce85079d',t:'MTc5MjU3MzAyMw=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a4f85c95393f858b',t:'MTc5MjgzODQwOA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 
 </html>
