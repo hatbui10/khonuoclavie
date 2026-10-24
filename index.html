@@ -1100,8 +1100,8 @@
             <section class="tab" id="tab-danhmuc">
               <div class="card dm-card">
                 <div class="dm-top">
-                  <div><h2>🗂 Danh mục</h2><p>Nhân viên · đối tác · hàng hóa. Thêm, sửa hoặc xóa trực tiếp từng dòng; dữ liệu lưu trên máy này.</p></div>
-                  <span class="dm-local" id="dm-save-status">💾 Lưu trên máy này</span>
+                  <div><h2>🗂 Danh mục</h2><p>Nhân viên · đối tác · hàng hóa. Dữ liệu đồng bộ Firebase và có bản dự phòng trên máy; Thêm/Sửa/Xóa cần mật khẩu.</p></div>
+                  <div class="dm-top-actions"><span class="dm-local" id="dm-save-status" data-cloud="wait">☁ Đang kết nối Firebase…</span><button type="button" class="btn ghost" id="dm-lock-btn">🔐 Nhập mật khẩu</button></div>
                 </div>
                 <div class="dm-summary">
                   <span class="dm-chip">👷 <b id="dm-total-staff">0</b> nhân viên</span>
@@ -5016,7 +5016,7 @@
         <script id="catalog-tab-js">
         (function(){
           "use strict";
-          const LS="langha_danhmuc_v1", TYPES=["staff","partners","products"];
+          const LS="langha_danhmuc_v1", META="langha_danhmuc_meta_v1", TYPES=["staff","partners","products"];
           const esc=v=>String(v==null?"":v).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
           const fold=v=>String(v==null?"":v).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/đ/g,"d");
           const numberFmt=new Intl.NumberFormat("en-US");
@@ -5089,9 +5089,23 @@
             return out;
           }
           let data=load();
+          try{if(!localStorage.getItem(LS))localStorage.setItem(LS,JSON.stringify(data));}catch(e){}
+          window.LH_DM_GET=function(){return JSON.stringify(data);};
+          window.LH_DM_SYNC=function(remote){
+            const obj=typeof remote==="string"?JSON.parse(remote):remote;
+            if(!obj||TYPES.some(t=>!Array.isArray(obj[t])))throw new Error("Dữ liệu Danh mục cloud không đúng cấu trúc");
+            data={staff:clone(obj.staff),partners:clone(obj.partners),products:clone(obj.products)};
+            renderAll();return true;
+          };
           const defaults={staff:{ma:"",ten:"",vietTat:"",kyHieu:""},partners:{nhom:"Nhà cung cấp",ten:"",sdt:"",ghiChu:""},products:{ma:"",ten:"",dienGiai:"",dvi:"Bình",giaNhap:null,giaBan:null}};
           const priceText=v=>v==null||v===""?"":(typeof v==="number"?numberFmt.format(v):String(v));
           const priceParse=v=>{const t=String(v==null?"":v).trim();if(!t)return null;if(/^-?\d[\d\s,.]*$/.test(t)){const n=Number(t.replace(/[\s,.]/g,""));if(Number.isFinite(n))return n;}return t;};
+          function editOn(){try{return document.body.classList.contains("lh-edit-on")&&sessionStorage.getItem("langha_unlocked")==="1";}catch(e){return false;}}
+          function syncLock(){
+            const locked=!editOn(),btn=root.querySelector("#dm-lock-btn");root.classList.toggle("dm-locked",locked);
+            if(btn){btn.textContent=locked?"🔐 Nhập mật khẩu":"🔒 Khóa sửa Danh mục";btn.title=locked?"Nhập mật khẩu quản trị để hiện Thêm/Sửa/Xóa":"Khóa lại các thao tác thay đổi Danh mục";}
+            if(locked)TYPES.forEach(closeEditor);
+          }
           function filtered(type){
             const input=root.querySelector('[data-dm-search="'+type+'"]'),q=fold(input?input.value.trim():""),terms=q.split(/\s+/).filter(Boolean);
             return data[type].filter(item=>{const text=fold(config[type].fields.map(f=>String(item[f.k]==null?"":item[f.k])+" "+priceText(item[f.k])).join(" "));return terms.every(t=>text.indexOf(t)>=0);});
@@ -5103,14 +5117,16 @@
               (rows.length?rows.map(item=>'<tr>'+cols.map(c=>'<td'+(c[2]==="num"?' class="dm-num"':'')+'>'+esc(priceText(item[c[0]]))+'</td>').join("")+actions(type,item)+'</tr>').join(""):'<tr><td class="dm-empty" colspan="'+(cols.length+1)+'">Không có dòng nào khớp tìm kiếm.</td></tr>')+'</tbody>';
             root.querySelector("#dm-shown-"+type).textContent=rows.length+" / "+data[type].length+" dòng";
           }
-          function renderAll(){TYPES.forEach(t=>{root.querySelector("#dm-total-"+t).textContent=data[t].length;renderTable(t);});}
+          function renderAll(){TYPES.forEach(t=>{root.querySelector("#dm-total-"+t).textContent=data[t].length;renderTable(t);});syncLock();}
           function save(message){
-            let ok=true;try{localStorage.setItem(LS,JSON.stringify(data));}catch(e){ok=false;}
-            root.querySelector("#dm-save-status").textContent=ok?"💾 Đã lưu · "+new Date().toLocaleTimeString("vi-VN"):"⚠ Không lưu được vào máy";
-            renderAll();if(typeof toast==="function")toast(ok?message:"Dữ liệu chỉ đổi trong phiên này, chưa lưu được vào máy",ok?"ok":"bad");
+            let ok=true;try{localStorage.setItem(LS,JSON.stringify(data));localStorage.setItem(META,JSON.stringify({t:Date.now()}));}catch(e){ok=false;}
+            const st=root.querySelector("#dm-save-status");st.dataset.cloud="wait";st.textContent=window.LH_DM_CLOUD_PUSH?(ok?"⏳ Đã lưu trên máy · chờ Firebase":"⏳ Đang thử lưu Firebase"):"⚠ Chưa có kênh Firebase · còn bản trên máy";
+            renderAll();if(window.LH_DM_CLOUD_PUSH)window.LH_DM_CLOUD_PUSH();
+            if(typeof toast==="function")toast(ok?message+" · đang đồng bộ Firebase":message+" · chưa lưu được vào máy, đang thử Firebase",ok?"ok":"bad");
           }
           function closeEditor(type){const box=root.querySelector('[data-dm-editor="'+type+'"]');box.hidden=true;box.innerHTML="";}
           function openEditor(type,id){
+            if(!editOn()){if(window.LH_ADMIN_GATE)window.LH_ADMIN_GATE.unlock(function(){openEditor(type,id);});return;}
             TYPES.forEach(closeEditor);
             const old=id?data[type].find(x=>x._id===id):null,item=Object.assign({},defaults[type],old||{}),cfg=config[type],box=root.querySelector('[data-dm-editor="'+type+'"]');
             box.innerHTML='<form data-dm-form="'+type+'" data-id="'+esc(id||"")+'"><div class="dm-form-head"><b>'+(id?"✏️ Sửa ":"＋ Thêm ")+cfg.title+'</b><button type="button" class="dm-btn" data-dm-cancel="'+type+'">✕ Đóng</button></div><div class="dm-form-grid">'+
@@ -5118,6 +5134,7 @@
             box.hidden=false;const first=box.querySelector("input");setTimeout(()=>{if(first)first.focus();},30);box.scrollIntoView({block:"nearest"});
           }
           function submitForm(form){
+            if(!editOn()){if(typeof toast==="function")toast("Cần mở khóa bằng mật khẩu trước khi lưu Danh mục.","bad");return;}
             const type=form.getAttribute("data-dm-form"),id=form.getAttribute("data-id"),cfg=config[type],err=form.querySelector(".dm-form-error"),item={};
             cfg.fields.forEach(f=>{const input=form.querySelector('[data-dm-field="'+f.k+'"]');item[f.k]=input.value.trim();});
             const missing=cfg.fields.find(f=>f.required&&!item[f.k]);
@@ -5137,19 +5154,73 @@
           root.addEventListener("input",e=>{const input=e.target.closest("[data-dm-search]");if(input)renderTable(input.getAttribute("data-dm-search"));});
           root.addEventListener("submit",e=>{const form=e.target.closest("[data-dm-form]");if(form){e.preventDefault();submitForm(form);}});
           root.addEventListener("click",e=>{
-            const add=e.target.closest("[data-dm-add]");if(add){openEditor(add.getAttribute("data-dm-add"),"");return;}
-            const edit=e.target.closest("[data-dm-edit]");if(edit){openEditor(edit.getAttribute("data-dm-edit"),edit.getAttribute("data-id"));return;}
+            const lock=e.target.closest("#dm-lock-btn");if(lock){
+              if(!window.LH_ADMIN_GATE){if(typeof toast==="function")toast("Hộp mật khẩu chưa sẵn sàng, hãy tải lại trang.","bad");return;}
+              if(editOn())window.LH_ADMIN_GATE.lock();else window.LH_ADMIN_GATE.unlock(syncLock);syncLock();return;
+            }
+            const add=e.target.closest("[data-dm-add]");if(add){if(editOn())openEditor(add.getAttribute("data-dm-add"),"");return;}
+            const edit=e.target.closest("[data-dm-edit]");if(edit){if(editOn())openEditor(edit.getAttribute("data-dm-edit"),edit.getAttribute("data-id"));return;}
             const cancel=e.target.closest("[data-dm-cancel]");if(cancel){closeEditor(cancel.getAttribute("data-dm-cancel"));return;}
             const exportBtn=e.target.closest("[data-dm-csv]");if(exportBtn){csv(exportBtn.getAttribute("data-dm-csv"));return;}
-            const del=e.target.closest("[data-dm-del]");if(!del)return;
+            const del=e.target.closest("[data-dm-del]");if(!del||!editOn())return;
             const type=del.getAttribute("data-dm-del"),id=del.getAttribute("data-id"),item=data[type].find(x=>x._id===id);if(!item)return;
             const label=item.ten||item.ma||item.nhom||config[type].title;
             if(!window.confirm('Xóa "'+label+'" khỏi '+config[type].title+'?'))return;
             data[type]=data[type].filter(x=>x._id!==id);closeEditor(type);save("✓ Đã xóa "+label);
           });
+          new MutationObserver(syncLock).observe(document.body,{attributes:true,attributeFilter:["class"]});
           renderAll();
         })();
         </script>
+<script id="catalog-cloud-js">
+(function(){
+  "use strict";
+  var LS="langha_danhmuc_v1",META="langha_danhmuc_meta_v1",DOC="danhmuc:main";
+  var shadow=null,started=false,pushTimer=null;
+  function localJson(){try{return localStorage.getItem(LS)||(window.LH_DM_GET?window.LH_DM_GET():null);}catch(e){return window.LH_DM_GET?window.LH_DM_GET():null;}}
+  function metaT(){try{var o=JSON.parse(localStorage.getItem(META)||"null");return o&&+o.t||0;}catch(e){return 0;}}
+  function setStatus(txt,state){var el=document.querySelector("#dm-save-status");if(el){el.textContent=txt;el.dataset.cloud=state||"wait";}}
+  function timeTxt(t){return new Date(t).toLocaleTimeString("vi-VN",{hour:"2-digit",minute:"2-digit",second:"2-digit"});}
+  function devName(){try{return typeof deviceName==="function"?deviceName():"";}catch(e){return "";}}
+  function errText(e){try{return typeof cfErr==="function"?cfErr(e):String(e&&e.message||e);}catch(x){return "lỗi kết nối";}}
+  function colRef(){if(typeof cfDb!=="function"||typeof COL==="undefined")return null;var db=cfDb();return db?db.collection(COL).doc(DOC):null;}
+  function doPush(){
+    var ref=null;try{ref=colRef();}catch(e){}
+    if(!ref){setStatus("⚠ Chưa nối Firebase · dữ liệu vẫn còn trên máy","bad");return;}
+    var j=localJson();if(!j)return;
+    if(shadow!==null&&j===shadow){setStatus("☁ Danh mục đã khớp Firebase","ok");return;}
+    var t=Date.now();setStatus("☁ Đang lưu Danh mục lên Firebase…","sync");
+    ref.set({json:j,t:t,dev:devName()}).then(function(){
+      shadow=j;try{if(t>metaT())localStorage.setItem(META,JSON.stringify({t:t}));}catch(e){}
+      setStatus("☁ Đã lưu Firebase · "+timeTxt(t),"ok");
+    }).catch(function(e){setStatus("⚠ Chưa lưu Firebase ("+errText(e)+") · còn bản trên máy","bad");});
+  }
+  window.LH_DM_CLOUD_PUSH=function(){if(pushTimer)clearTimeout(pushTimer);pushTimer=setTimeout(doPush,300);};
+  function backupLocal(){
+    try{var prev=localStorage.getItem(LS);if(!prev)return;var arr=JSON.parse(localStorage.getItem("langha_danhmuc_backups_v1")||"[]");if(arr.length&&arr[0].data===prev)return;arr.unshift({t:Date.now(),data:prev});localStorage.setItem("langha_danhmuc_backups_v1",JSON.stringify(arr.slice(0,8)));}catch(e){}
+  }
+  function applyRemote(j,t){
+    shadow=j;backupLocal();window.__LH_DM_APPLYING=true;
+    try{localStorage.setItem(LS,j);localStorage.setItem(META,JSON.stringify({t:t}));}catch(e){}
+    try{if(window.LH_DM_SYNC)window.LH_DM_SYNC(j);}finally{window.__LH_DM_APPLYING=false;}
+    setStatus("☁ Đã nhận Danh mục mới từ Firebase · "+timeTxt(t),"ok");
+    if(typeof toast==="function")toast("☁ Đã cập nhật Danh mục từ Firebase.","ok");
+  }
+  function onDoc(snap){
+    if(!snap||!snap.exists){window.LH_DM_CLOUD_PUSH();return;}
+    var d=snap.data()||{},j=typeof d.json==="string"?d.json:"",t=+d.t||0;if(!j)return;
+    if(j===localJson()){shadow=j;setStatus("☁ Danh mục đã khớp Firebase","ok");return;}
+    if(t>=metaT())applyRemote(j,t);else window.LH_DM_CLOUD_PUSH();
+  }
+  function start(tries){
+    if(started)return;var ref=null;try{ref=colRef();}catch(e){}
+    if(!ref){setStatus("☁ Đang kết nối Firebase cho Danh mục…","wait");if((tries||0)<12)setTimeout(function(){start((tries||0)+1);},1500);else setStatus("⚠ Chưa nối Firebase · đang dùng bản trên máy","bad");return;}
+    started=true;ref.onSnapshot(onDoc,function(e){started=false;setStatus("⚠ Mất kênh Firebase ("+errText(e)+") · còn bản trên máy","bad");});
+  }
+  window.addEventListener("online",function(){started=false;start(0);window.LH_DM_CLOUD_PUSH();});
+  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",function(){start(0);});else start(0);
+})();
+</script>
         <script id="lh-mobile-v2-js">
             /* ===== LÁNG HẠ MOBILE V2 =====
                1) Tab -> nút bấm ở màn hình chính; nội dung bật như thông báo, nền sau mờ.
@@ -6249,6 +6320,10 @@
                   '<button type="button" class="btn ghost" id="lh-lock" style="display:none">🔒 Khoá lại</button>' +
                   '<button type="button" class="btn ghost" id="lh-bk-toggle">🕘 Sao lưu &amp; khôi phục</button>' +
                 "</div>" +
+                '<div class="lh-xlsx-progress" id="lh-xlsx-progress" hidden role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-live="polite">' +
+                  '<div class="lh-xlsx-progress-top"><span id="lh-xlsx-progress-label">Đang chờ file Excel…</span><b id="lh-xlsx-progress-pct">0%</b></div>' +
+                  '<div class="lh-xlsx-track"><div class="lh-xlsx-fill" id="lh-xlsx-fill"></div></div>' +
+                  '<div class="hint" id="lh-xlsx-progress-note">Chỉ đọc NhanSu / BangCong; không chạy macro.</div></div>' +
                 '<div class="hint" id="lh-admin-state">👁 Đang ở chế độ xem.</div>' +
                 '<div id="lh-bk-panel" style="display:none;margin-top:10px"></div>';
               var homeEl = document.getElementById("lhHome");
@@ -6320,6 +6395,24 @@
               $("#lh-pw-cancel").addEventListener("click", function(){ ov.classList.remove("on"); pendingAfterUnlock = null; });
               ov.addEventListener("click", function(e){ if (e.target === ov){ ov.classList.remove("on"); pendingAfterUnlock = null; } });
             
+              window.LH_ADMIN_GATE = {
+                isUnlocked: isUnlocked,
+                isEditing: function(){ return isUnlocked() && document.body.classList.contains("lh-edit-on"); },
+                unlock: function(after){
+                  var go = function(){
+                    document.body.classList.add("lh-edit-on");
+                    refreshAdmin();
+                    if (typeof after === "function") after();
+                  };
+                  if (isUnlocked()) go(); else askPassword(go);
+                },
+                lock: function(){
+                  try { sessionStorage.removeItem("langha_unlocked"); } catch(e){}
+                  document.body.classList.remove("lh-edit-on");
+                  refreshAdmin();
+                }
+              };
+
               /* ---------- Khoá thao tác sửa & xuất/tải file sau mật khẩu ----------
                  Bình thường: chỉ xem + đặt đơn hàng mới + in phiếu + bấm gọi.
                  Bấm nút sửa / xoá / xuất-tải file khi chưa mở khoá -> hỏi mật khẩu
@@ -6428,7 +6521,10 @@
                   .replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '\"').replace(/&apos;/g, "'")
                   .replace(/&amp;/g, "&");
               }
-              async function unzipRead(buf){
+              function excelYield(){ return new Promise(function(resolve){ setTimeout(resolve, 0); }); }
+              function excelPaint(){ return new Promise(function(resolve){ if (window.requestAnimationFrame) requestAnimationFrame(function(){ resolve(); }); else setTimeout(resolve, 16); }); }
+              async function unzipRead(buf, onProgress){
+                if (buf.byteLength < 22) throw new Error("File Excel quá nhỏ hoặc bị hỏng.");
                 var dv = new DataView(buf);
                 var eocd = -1;
                 for (var i = buf.byteLength - 22; i >= Math.max(0, buf.byteLength - 22 - 65536); i--){
@@ -6452,6 +6548,8 @@
                   var lelen = dv.getUint16(lho + 28, true);
                   entries[name] = { method: method, data: new Uint8Array(buf, lho + 30 + lnlen + lelen, csize) };
                   pos += 46 + nlen + elen + clen;
+                  if (onProgress) onProgress((n + 1) / Math.max(1, count));
+                  if ((n + 1) % 250 === 0) await excelYield();
                 }
                 return async function(name){
                   var e = entries[name];
@@ -6466,10 +6564,10 @@
                   throw new Error("File Excel dùng kiểu nén lạ, không đọc được.");
                 };
               }
-              function sheetRows(xml, shared){
-                var rows = [];
+              async function sheetRows(xml, shared, onProgress){
+                var rows = [], seenRows = 0;
                 var rowRe = /<row\b[^>]*>([\s\S]*?)<\/row>/g, m;
-                while ((m = rowRe.exec(xml))){
+                while ((m = rowRe.exec(xml))){ seenRows++;
                   var cells = {}, maxC = -1;
                   var cellRe = /<c\b([^>]*?)(?:\/>|>([\s\S]*?)<\/c>)/g, cm;
                   while ((cm = cellRe.exec(m[1]))){
@@ -6501,11 +6599,16 @@
                   var arr = [];
                   for (var c = 0; c <= maxC; c++) arr.push(cells[c] != null ? cells[c] : "");
                   if (arr.some(function(x){ return x !== ""; })) rows.push(arr);
+                  if (onProgress && seenRows % 20 === 0) onProgress(Math.min(1, rowRe.lastIndex / Math.max(1, xml.length)));
+                  if (seenRows % 80 === 0) await excelYield();
                 }
+                if (onProgress) onProgress(1);
                 return rows;
               }
-              async function parseXlsx(buf){
-                var read = await unzipRead(buf);
+              async function parseXlsx(buf, onProgress){
+                var report = function(p, label){ if (onProgress) onProgress(Math.max(0, Math.min(100, p)), label); };
+                var read = await unzipRead(buf, function(f){ report(16 + f * 4, "Đang mở gói Excel…"); });
+                report(20, "Đang đọc cấu trúc workbook…");
                 var wb = await read("xl/workbook.xml");
                 if (!wb) throw new Error("Không thấy nội dung workbook trong file.");
                 var rels = (await read("xl/_rels/workbook.xml.rels")) || "";
@@ -6515,44 +6618,59 @@
                   var idM = /Id="([^"]+)"/.exec(rm[0]), tgM = /Target="([^"]+)"/.exec(rm[0]);
                   if (idM && tgM) relMap[idM[1]] = tgM[1];
                 }
+                report(23, "Đang đọc quan hệ sheet…");
                 var shared = [];
                 var shXml = await read("xl/sharedStrings.xml");
                 if (shXml){
-                  var siRe = /<si>([\s\S]*?)<\/si>/g, sm;
+                  var siRe = /<si>([\s\S]*?)<\/si>/g, sm, sharedCount = 0;
                   while ((sm = siRe.exec(shXml))){
                     var ts = [], tRe2 = /<t[^>]*>([\s\S]*?)<\/t>/g, tm2;
                     while ((tm2 = tRe2.exec(sm[1]))) ts.push(tm2[1]);
-                    shared.push(xmlDec(ts.join("")));
+                    shared.push(xmlDec(ts.join(""))); sharedCount++;
+                    if (sharedCount % 250 === 0){ report(25 + 14 * Math.min(1, siRe.lastIndex / Math.max(1, shXml.length)), "Đang đọc chuỗi dùng chung…"); await excelYield(); }
                   }
                 }
-                var out = {};
+                report(40, "Đang xác định sheet NhanSu / BangCong…");
+                var out = {}, wanted = [];
                 var shRe = /<sheet\b[^>]*>/g, shm;
                 while ((shm = shRe.exec(wb))){
                   var nm = /name="([^"]+)"/.exec(shm[0]);
                   var rid = /r:id="([^"]+)"/.exec(shm[0]);
                   if (!nm || !rid) continue;
+                  var sheetName = xmlDec(nm[1]), normSheet = normTxt(sheetName);
+                  if (sheetName !== "NhanSu" && sheetName !== "BangCong" && normSheet.indexOf("nhan") < 0 && normSheet.indexOf("cong") < 0) continue;
                   var target = relMap[rid[1]] || "";
                   var path = target.charAt(0) === "/" ? target.slice(1) : ("xl/" + target.replace(/^\.\//, ""));
-                  var xml = await read(path);
-                  if (xml) out[xmlDec(nm[1])] = sheetRows(xml, shared);
+                  wanted.push({ name: sheetName, path: path });
+                }
+                for (var wi = 0; wi < wanted.length; wi++){
+                  var item = wanted[wi];
+                  report(40 + 45 * wi / Math.max(1, wanted.length), "Đang giải nén sheet " + item.name + "…");
+                  var xml = await read(item.path);
+                  if (xml) {
+                    out[item.name] = await sheetRows(xml, shared, function(f){ report(40 + 45 * (wi + f) / Math.max(1, wanted.length), "Đang tách dữ liệu " + item.name + "…"); });
+                    report(40 + 45 * (wi + 1) / Math.max(1, wanted.length), "Đã đọc xong sheet " + item.name);
+                    await excelYield();
+                  }
                 }
                 return out;
               }
-              function rowsToObjs(rows){
+              async function rowsToObjs(rows, onProgress){
                 var hi = -1;
                 for (var i = 0; i < Math.min(rows.length, 12); i++){
                   var joined = rows[i].map(function(c){ return normTxt(c); }).join("|");
                   if (joined.indexOf("ho ten") >= 0 || joined.indexOf("ma don") >= 0 || joined.indexOf("nhan vien") >= 0){ hi = i; break; }
                 }
                 if (hi < 0) return [];
-                var headers = rows[hi].map(function(h){ return normTxt(h); });
-                return rows.slice(hi + 1).map(function(r){
-                  var o = {};
+                var headers = rows[hi].map(function(h){ return normTxt(h); }), out = [];
+                for (var ri = hi + 1; ri < rows.length; ri++){
+                  var r = rows[ri], o = {};
                   headers.forEach(function(h, ci){ if (h) o[h] = r[ci]; });
-                  return o;
-                }).filter(function(o){
-                  return Object.keys(o).some(function(k){ return o[k] !== "" && o[k] != null; });
-                });
+                  if (Object.keys(o).some(function(k){ return o[k] !== "" && o[k] != null; })) out.push(o);
+                  if ((ri - hi) % 250 === 0){ if (onProgress) onProgress((ri - hi) / Math.max(1, rows.length - hi - 1)); await excelYield(); }
+                }
+                if (onProgress) onProgress(1);
+                return out;
               }
               function getField(o, re){
                 for (var k in o){ if (re.test(k)) return o[k]; }
@@ -6571,15 +6689,21 @@
                 if (m) return m[1] + "-" + m[2].padStart(2, "0") + "-" + m[3].padStart(2, "0");
                 return t;
               }
-              function syncExcelData(wb){
+              async function syncExcelData(wb, onProgress){
                 var data = nsData();
                 var added = 0, updated = 0, recAdded = 0, recSkip = 0;
                 var names = Object.keys(wb);
                 var empSheetName = names.indexOf("NhanSu") >= 0 ? "NhanSu" : names.find(function(k){ return normTxt(k).indexOf("nhan") >= 0; });
                 var congSheetName = names.indexOf("BangCong") >= 0 ? "BangCong" : names.find(function(k){ return normTxt(k).indexOf("cong") >= 0; });
-                rowsToObjs(empSheetName ? wb[empSheetName] : []).forEach(function(o){
+                var empRows = await rowsToObjs(empSheetName ? wb[empSheetName] : [], function(f){ if (onProgress) onProgress(85 + f * 2, "Đang đọc dòng NhanSu…"); });
+                var congRows = await rowsToObjs(congSheetName ? wb[congSheetName] : [], function(f){ if (onProgress) onProgress(87 + f * 2, "Đang đọc dòng BangCong…"); });
+                var empByName = Object.create(null);
+                data.emps.forEach(function(e){ empByName[normTxt(e.ten || "")] = e; });
+                for (var ei = 0; ei < empRows.length; ei++){
+                  if (ei > 0 && ei % 200 === 0){ if (onProgress) onProgress(89 + 2 * ei / Math.max(1, empRows.length), "Đang đối chiếu nhân viên…"); await excelYield(); }
+                  var o = empRows[ei];
                   var ten = String(getField(o, /ho ten/) || "").trim();
-                  if (!ten) return;
+                  if (!ten) continue;
                   var sinh = toISODate(getField(o, /sinh/));
                   var sdtRaw = getField(o, /dien thoai|sdt/);
                   var sdt = "";
@@ -6588,8 +6712,7 @@
                   var ghi = String(getField(o, /ghi chu/) || "").trim();
                   var rateRaw = getField(o, /tien cong/);
                   var rate = (rateRaw === "" || rateRaw == null) ? null : Math.max(0, +String(rateRaw).replace(/[^\d]/g, "") || 0);
-                  var key = normTxt(ten);
-                  var ex = data.emps.find(function(e){ return normTxt(e.ten || "") === key; });
+                  var key = normTxt(ten), ex = empByName[key];
                   if (ex){
                     if (sinh) ex.sinh = sinh;
                     if (sdt) ex.sdt = sdt;
@@ -6597,16 +6720,23 @@
                     if (rate != null) ex.rate = rate;
                     updated++;
                   } else {
-                    data.emps.push({ id: "nvU" + Date.now().toString(36) + added, ten: ten, sinh: sinh, sdt: sdt, ghi: ghi, rate: rate == null ? 6500 : rate });
-                    added++;
+                    ex = { id: "nvU" + Date.now().toString(36) + added, ten: ten, sinh: sinh, sdt: sdt, ghi: ghi, rate: rate == null ? 6500 : rate };
+                    data.emps.push(ex); empByName[key] = ex; added++;
                   }
+                }
+                function recKey(nvId, ngay, maDon, slB, slV){ return [nvId, ngay, maDon, slB, slV].join("|"); }
+                var recSeen = Object.create(null);
+                data.recs.forEach(function(r){
+                  recSeen[recKey(r.nvId, toISODate(r.ngay || ""), String(r.maDon || "").trim(), +r.slBinh || 0, +r.slVo || 0)] = true;
                 });
-                rowsToObjs(congSheetName ? wb[congSheetName] : []).forEach(function(o, idx){
+                for (var idx = 0; idx < congRows.length; idx++){
+                  if (idx > 0 && idx % 200 === 0){ if (onProgress) onProgress(91 + 5 * idx / Math.max(1, congRows.length), "Đang đối chiếu bảng công…"); await excelYield(); }
+                  var o = congRows[idx];
                   var nguon = normTxt(getField(o, /nguon/) || "");
-                  if (nguon.indexOf("nhap tay") < 0) return;
+                  if (nguon.indexOf("nhap tay") < 0) continue;
                   var nvTen = String(getField(o, /nhan vien/) || "").trim();
-                  var emp = data.emps.find(function(e){ return normTxt(e.ten || "") === normTxt(nvTen); });
-                  if (!emp){ recSkip++; return; }
+                  var emp = empByName[normTxt(nvTen)];
+                  if (!emp){ recSkip++; continue; }
                   var ngay = toISODate(getField(o, /^ngay$/));
                   var maDon = String(getField(o, /ma don/) || "").trim();
                   var slB = +getField(o, /binh giao/) || 0;
@@ -6614,19 +6744,22 @@
                   var congRaw = getField(o, /tien cong/);
                   var cong = +String(congRaw == null ? "" : congRaw).replace(/[^\d]/g, "") || 0;
                   var dvi = String(getField(o, /don vi tinh/) || "Bình").trim() || "Bình";
-                  var dup = data.recs.some(function(r){
-                    return r.nvId === emp.id && toISODate(r.ngay || "") === ngay &&
-                           String(r.maDon || "").trim() === maDon &&
-                           (+r.slBinh || 0) === slB && (+r.slVo || 0) === slV;
-                  });
-                  if (dup){ recSkip++; return; }
+                  var key = recKey(emp.id, ngay, maDon, slB, slV);
+                  if (recSeen[key]){ recSkip++; continue; }
+                  recSeen[key] = true;
                   data.recs.push({ id: "recU" + Date.now().toString(36) + idx, nvId: emp.id, ngay: ngay,
                                    maDon: maDon, slBinh: slB, slVo: slV, tienCong: cong, donVi: dvi });
                   recAdded++;
-                });
-                nsSnapshotCurrent();
-                try { localStorage.setItem(LS_NS, JSON.stringify(data)); } catch(e){}
-                if (window.LH_NS_SYNC) window.LH_NS_SYNC();
+                }
+                if (!added && !updated && !recAdded && !recSkip)
+                  throw new Error("Không tìm thấy dữ liệu đúng mẫu: sheet NhanSu cần cột Họ tên; BangCong chỉ đồng bộ các dòng có Nguồn = Nhập tay.");
+                if (onProgress) onProgress(96, "Đang tạo bản sao lưu trước khi ghi…");
+                await excelYield(); nsSnapshotCurrent();
+                if (onProgress) onProgress(97, "Đang lưu dữ liệu trên máy…");
+                await excelYield(); try { localStorage.setItem(LS_NS, JSON.stringify(data)); } catch(e){}
+                if (onProgress) onProgress(98, "Đang cập nhật giao diện và hàng đợi Firebase…");
+                await excelPaint(); if (window.LH_NS_SYNC) window.LH_NS_SYNC();
+                if (onProgress) onProgress(99, "Đã cập nhật giao diện");
                 return { added: added, updated: updated, recAdded: recAdded, recSkip: recSkip };
               }
               function nsSnapshotCurrent(){
@@ -6716,22 +6849,62 @@
                   if (typeof toast === "function") toast("Không khôi phục được: " + (e && e.message ? e.message : e), "bad");
                 }
               }
+              var excelBusy = false, excelPct = 0, excelProgressTimer = null;
+              function excelProgress(pct, label, state){
+                excelPct = Math.max(0, Math.min(100, Math.round(pct || 0)));
+                var box = $("#lh-xlsx-progress"); if (!box) return;
+                box.hidden = false; box.dataset.state = state || "busy"; box.setAttribute("aria-valuenow", String(excelPct));
+                $("#lh-xlsx-progress-pct").textContent = excelPct + "%";
+                $("#lh-xlsx-progress-label").textContent = label || "Đang xử lý Excel…";
+                $("#lh-xlsx-fill").style.width = excelPct + "%";
+              }
+              function readExcelFile(file){
+                return new Promise(function(resolve, reject){
+                  var fr = new FileReader();
+                  fr.onprogress = function(e){ if (e.lengthComputable && e.total) excelProgress(2 + 13 * e.loaded / e.total, "Đang đọc file từ máy…", "busy"); };
+                  fr.onerror = function(){ reject(new Error("Không đọc được file từ máy.")); };
+                  fr.onabort = function(){ reject(new Error("Đã hủy đọc file.")); };
+                  fr.onload = function(){ excelProgress(15, "Đã đọc file, đang kiểm tra định dạng…", "busy"); resolve(fr.result); };
+                  fr.readAsArrayBuffer(file);
+                });
+              }
+              function assertReadableExcel(buf){
+                var b = new Uint8Array(buf, 0, Math.min(8, buf.byteLength));
+                var ole = b.length >= 8 && b[0] === 0xD0 && b[1] === 0xCF && b[2] === 0x11 && b[3] === 0xE0 && b[4] === 0xA1 && b[5] === 0xB1 && b[6] === 0x1A && b[7] === 0xE1;
+                if (ole) throw new Error("File đang ở dạng Excel OLE/mã hóa, thường gặp khi đặt mật khẩu mở file. Trang không giải mã được: hãy mở bằng Excel và bỏ mật khẩu mở file trên BẢN SAO, rồi lưu lại .xlsx/.xlsm. Nếu chỉ khóa sheet thì không cần bỏ khóa sheet.");
+                var zip = b.length >= 4 && b[0] === 0x50 && b[1] === 0x4B && ((b[2] === 3 && b[3] === 4) || (b[2] === 5 && b[3] === 6) || (b[2] === 7 && b[3] === 8));
+                if (!zip) throw new Error("File không phải gói .xlsx/.xlsm chuẩn. Hãy lưu lại đúng định dạng Excel Workbook hoặc Macro-Enabled Workbook.");
+              }
               async function handleUpload(file){
+                if (excelBusy){ if (typeof toast === "function") toast("Đang xử lý file Excel trước đó, vui lòng chờ.", "bad"); return; }
+                excelBusy = true;
+                if (excelProgressTimer) clearTimeout(excelProgressTimer);
+                if (dlBtn) dlBtn.disabled = true; if (pickBtn) pickBtn.disabled = true;
                 try {
                   if (!/\.(xlsm|xlsx)$/i.test(file.name || "")) throw new Error("Hãy chọn file .xlsm hoặc .xlsx.");
-                  var wb = await parseXlsx(await file.arrayBuffer());
-                  if (!wb.NhanSu && !wb.BangCong) throw new Error("File không có sheet NhanSu / BangCong như file mẫu của trang.");
-                  var r = syncExcelData(wb);
+                  excelProgress(0, "Đang chuẩn bị đọc Excel…", "busy");
+                  var note = $("#lh-xlsx-progress-note"); if (note) note.textContent = file.name + " · " + (file.size / 1048576).toFixed(2) + " MB · chỉ NhanSu/BangCong, không chạy macro.";
+                  if (typeof toast === "function") toast("⏳ Đang đọc Excel — theo dõi thanh tiến trình trong Cài đặt…", "ok");
+                  await excelPaint();
+                  var buf = await readExcelFile(file);
+                  assertReadableExcel(buf);
+                  var wb = await parseXlsx(buf, function(p, label){ excelProgress(p, label, "busy"); });
+                  if (!Object.keys(wb).length) throw new Error("File không có sheet NhanSu / BangCong như file mẫu của trang.");
+                  var r = await syncExcelData(wb, function(p, label){ excelProgress(p, label, "busy"); });
+                  excelProgress(100, "Hoàn tất: đã đồng bộ NhanSu / BangCong", "ok");
+                  excelProgressTimer = setTimeout(function(){ var box = $("#lh-xlsx-progress"); if (box && box.dataset.state === "ok") box.hidden = true; }, 5000);
                   if (typeof toast === "function")
-                    toast("✅ Đã đồng bộ từ Excel: thêm " + r.added + " nhân viên mới, cập nhật " + r.updated +
+                    toast("✅ Đã đồng bộ Nhân sự từ Excel: thêm " + r.added + " nhân viên mới, cập nhật " + r.updated +
                           " hồ sơ, thêm " + r.recAdded + " lần giao nhập tay" +
                           (r.recSkip ? " (bỏ qua " + r.recSkip + " dòng trùng/không khớp nhân viên)" : "") + ".", "ok");
                 } catch(e){
-                  if (typeof toast === "function") toast("Không đồng bộ được: " + (e && e.message ? e.message : e), "bad");
-                }
+                  var msg = "Không đồng bộ được: " + (e && e.message ? e.message : e);
+                  excelProgress(excelPct, msg, "bad");
+                  if (typeof toast === "function") toast(msg, "bad");
+                } finally { excelBusy = false; if (dlBtn) dlBtn.disabled = false; if (pickBtn) pickBtn.disabled = false; }
               }
-            
-              function nsData(){
+
+                          function nsData(){
                 var o = { emps: [], recs: [], rate: 6500 };
                 try { var raw = JSON.parse(localStorage.getItem(LS_NS) || "null"); if (raw) o = raw; } catch(e){}
                 if (!Array.isArray(o.emps)) o.emps = [];
@@ -8473,14 +8646,14 @@ body.lhm-mode .gh-tools > .gh-lb{grid-column:1/-1}
    NHÂN SỰ — bảng điều khiển + hộp mật khẩu (dùng cho cả bản điện thoại & máy tính)
    ========================================================================= */
 
-/* ---------- 1. Luôn hiện nút Sửa / Xoá trên từng nhân viên (bấm sẽ hỏi mật khẩu) ---------- */
-body.lhm-ns-show:not(.lhm-ns-off) [data-ns-edit],
-body.lhm-ns-show:not(.lhm-ns-off) [data-ns-del]{
+/* ---------- 1. Chỉ hiện nút Sửa / Xoá trên từng nhân viên sau khi mở khóa ---------- */
+body.lhm-ns-show.lh-edit-on:not(.lhm-ns-off) [data-ns-edit],
+body.lhm-ns-show.lh-edit-on:not(.lhm-ns-off) [data-ns-del]{
   display:inline-flex!important;align-items:center;justify-content:center;gap:5px;
   min-height:40px;padding:7px 13px;border-radius:11px;font-size:13px;font-weight:700
 }
-body.lhm-ns-show:not(.lhm-ns-off) [data-ns-edit]{border-color:#9fb8e4;color:var(--blue)}
-body.lhm-ns-show:not(.lhm-ns-off) [data-ns-del]{border-color:#e7bcbc;color:#b3261e}
+body.lhm-ns-show.lh-edit-on:not(.lhm-ns-off) [data-ns-edit]{border-color:#9fb8e4;color:var(--blue)}
+body.lhm-ns-show.lh-edit-on:not(.lhm-ns-off) [data-ns-del]{border-color:#e7bcbc;color:#b3261e}
 /* nút “Thêm nhân viên” gốc được thay bằng nút trong bảng điều khiển */
 body.lhm-ns-show #ns-add{display:none!important}
 body.lhm-mode [data-ns-edit],
@@ -9765,12 +9938,11 @@ body.in-land #in-overlay .inp-thanks{display:none}
         '</span>' +
       '</div>' +
       '<div class="lhm-ns-acts">' +
-        '<button type="button" class="btn" data-ns-act="add">' + ic("plus") + 'Thêm nhân viên</button>' +
         (un
-          ? '<button type="button" class="btn ghost" data-ns-act="changepw">' + ic("key") + 'Đổi mật khẩu</button>' +
+          ? '<button type="button" class="btn" data-ns-act="add">' + ic("plus") + 'Thêm nhân viên</button>' +
+            '<button type="button" class="btn ghost" data-ns-act="changepw">' + ic("key") + 'Đổi mật khẩu</button>' +
             '<button type="button" class="btn ghost" data-ns-act="lock">' + ic("lock") + 'Khoá lại</button>'
-          : '<button type="button" class="btn ghost" data-ns-act="unlock">' + ic("unlock") + 'Nhập mật khẩu</button>' +
-            '<button type="button" class="btn ghost" data-ns-act="changepw">' + ic("key") + 'Đổi mật khẩu</button>') +
+          : '<button type="button" class="btn ghost" data-ns-act="unlock">' + ic("unlock") + 'Nhập mật khẩu</button>') +
       '</div>';
   }
 
@@ -9957,6 +10129,7 @@ body.in-land #in-overlay .inp-thanks{display:none}
   /* ---------------- khởi động ---------------- */
   function bootStaff() {
     document.body.classList.add("lhm-ns-show");
+    document.body.classList.toggle("lh-edit-on", isUnlocked());
     buildPanel();
     buildModal();
     renderPanel();
@@ -10521,7 +10694,7 @@ body.in-land #in-overlay .inp-thanks{display:none}
         <style id="lh-quick-ui-css">
           /* ===== NÚT ĐẶT ĐƠN NỔI + CÀI ĐẶT DÙNG CHUNG + LOGIN PREVIEW ===== */
           #lh-desktop-gear{
-            margin-left:auto;flex:0 0 auto;width:42px;height:42px;border-radius:13px;padding:0;
+            margin-left:0;flex:0 0 auto;width:42px;height:42px;border-radius:13px;padding:0;
             background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.25);color:#fff;
             display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 5px 15px rgba(12,30,60,.12)
           }
@@ -10529,7 +10702,7 @@ body.in-land #in-overlay .inp-thanks{display:none}
           #lh-desktop-gear:active{transform:scale(.94)}
           #lh-desktop-gear svg{width:22px;height:22px}
           body.lhm-mode #lh-desktop-gear{display:none!important}
-          body:not(.lhm-mode) #lhm-row-more,body:not(.lhm-mode) #lhm-set-tabs,body:not(.lhm-mode) #lhm-set-desktop{display:none!important}
+          body:not(.lhm-mode) #lhm-row-more,body:not(.lhm-mode) #lhm-set-tabs{display:none!important}
           body:not(.lhm-mode) #lhmSet{box-sizing:border-box}
           body:not(.lhm-mode) #lhmSet.on{align-items:flex-start;justify-content:flex-end;padding:78px 22px 22px}
           body:not(.lhm-mode) #lhmSet .lhm-set-panel{width:min(480px,calc(100vw - 32px));border-radius:22px;padding:16px;max-height:calc(100dvh - 100px);box-shadow:0 24px 70px rgba(5,15,35,.42)}
@@ -10543,19 +10716,24 @@ body.in-land #in-overlay .inp-thanks{display:none}
           #lh-login-settings .k span{font-size:12px;color:var(--ink-2);margin-top:2px}
 
           #lh-order-fab{
-            position:fixed;right:22px;bottom:22px;z-index:95;display:inline-flex;align-items:center;justify-content:center;gap:10px;
-            min-height:56px;padding:0 21px 0 14px;border:1px solid rgba(255,255,255,.35);border-radius:18px;
-            background:linear-gradient(145deg,#3d73c8,#27559d);color:#fff;font:800 14px/1.2 Arial,sans-serif;letter-spacing:.1px;
-            cursor:pointer;box-shadow:0 8px 0 #173d78,0 16px 32px rgba(15,45,90,.34);transition:transform .16s ease,box-shadow .16s ease
+            margin-left:auto;flex:0 0 auto;position:static;display:inline-flex;align-items:center;justify-content:center;gap:8px;
+            min-height:42px;padding:0 14px 0 9px;border:1px solid rgba(255,255,255,.35);border-radius:13px;
+            background:linear-gradient(145deg,#3d73c8,#27559d);color:#fff;font:800 13px/1.2 Arial,sans-serif;letter-spacing:.1px;white-space:nowrap;
+            cursor:pointer;box-shadow:0 4px 0 #173d78,0 8px 18px rgba(15,45,90,.26);transition:transform .14s ease,box-shadow .14s ease
           }
-          #lh-order-fab:hover{transform:translateY(-2px);box-shadow:0 10px 0 #173d78,0 19px 36px rgba(15,45,90,.38)}
-          #lh-order-fab:active{transform:translateY(5px);box-shadow:0 3px 0 #173d78,0 8px 18px rgba(15,45,90,.28)}
-          #lh-order-fab .lh-fab-ic{width:32px;height:32px;border-radius:11px;background:rgba(255,255,255,.17);display:flex;align-items:center;justify-content:center}
-          #lh-order-fab svg{width:19px;height:19px}
-          body.lhm-mode #lh-order-fab{right:14px;bottom:calc(var(--lhm-nav,72px) + 15px + env(safe-area-inset-bottom));min-height:52px;border-radius:17px}
-          body.lhm-mode.lh-sheet-open #lh-order-fab{bottom:calc(16px + env(safe-area-inset-bottom))}
-          body.lhm-mode main .tab.on{padding-bottom:calc(96px + env(safe-area-inset-bottom))}
-          body:not(.lhm-mode) #lhmPill{bottom:102px!important}
+          #lh-order-fab:hover{transform:translateY(-1px);box-shadow:0 5px 0 #173d78,0 10px 22px rgba(15,45,90,.30)}
+          #lh-order-fab:active{transform:translateY(3px);box-shadow:0 1px 0 #173d78,0 5px 12px rgba(15,45,90,.22)}
+          #lh-order-fab .lh-fab-ic{width:28px;height:28px;border-radius:9px;background:rgba(255,255,255,.17);display:flex;align-items:center;justify-content:center}
+          #lh-order-fab svg{width:17px;height:17px}
+          #lh-order-fab .lh-fab-short{display:none}
+          body.lhm-mode #lh-order-fab{margin-left:0;min-height:42px;padding:0 11px 0 8px;border-radius:13px;font-size:12px;gap:6px;box-shadow:0 3px 0 #173d78,0 7px 15px rgba(15,45,90,.24)}
+          body.lhm-mode #lh-order-fab .lh-fab-ic{width:26px;height:26px}
+          body.lhm-mode #lh-order-fab .lh-fab-full{display:none}
+          body.lhm-mode #lh-order-fab .lh-fab-short{display:inline}
+          #lhmPill{display:none!important}
+          body:not(.lhm-mode) #lh-view-desktop{display:none!important}
+          body.lhm-mode #lh-view-mobile{display:none!important}
+          #lhm-set-desktop .btn{width:100%;justify-content:center;margin-top:4px}
           body.lh-login-open{overflow:hidden!important}
           body.lh-login-open #lh-order-fab{pointer-events:none}
 
@@ -10613,7 +10791,7 @@ body.in-land #in-overlay .inp-thanks{display:none}
           .lh-sr-only{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
           [hidden]{display:none!important}
           @media(max-width:480px){
-            #lh-order-fab{right:12px;padding-right:16px;font-size:13px;min-height:50px;gap:8px}
+            #lh-order-fab{padding-right:10px;font-size:12px;min-height:40px;gap:6px}
             #lh-order-fab .lh-fab-ic{width:29px;height:29px}
             #lh-login-ui{padding:54px 15px 20px}
             .lh-login-stage{min-height:calc(100dvh - 74px);justify-content:center}
@@ -10643,12 +10821,32 @@ body.in-land #in-overlay .inp-thanks{display:none}
           function buildFab(){
             if($('#lh-order-fab'))return;
             var b=document.createElement('button');b.id='lh-order-fab';b.type='button';b.title='Đặt đơn hàng mới';b.setAttribute('aria-label','Đặt đơn hàng mới');
-            b.innerHTML='<span class="lh-fab-ic">'+receiptSVG+'</span><span>Đặt đơn hàng</span>';
+            b.innerHTML='<span class="lh-fab-ic">'+receiptSVG+'</span><span class="lh-fab-label"><span class="lh-fab-full">Đặt đơn hàng</span><span class="lh-fab-short">Đặt đơn</span></span>';
             b.addEventListener('click',function(){
               try{if(typeof window.openOrder==='function'){window.openOrder(null);return}}catch(e){}
               say('Form đặt đơn chưa sẵn sàng, vui lòng tải lại trang.');
             });
             document.body.appendChild(b);
+          }
+          function placeFab(){
+            var b=$('#lh-order-fab');if(!b)return;
+            var mobile=document.body.classList.contains('lhm-mode'),g=mobile?$('#lhm-gear'):$('#lh-desktop-gear');
+            if(!g||!g.parentNode)return;
+            if(b.parentNode!==g.parentNode||b.nextElementSibling!==g)g.parentNode.insertBefore(b,g);
+          }
+          function addViewSettings(){
+            var slot=$('#lhm-set-desktop');if(!slot)return;
+            var desktop=slot.querySelector('button');if(desktop)desktop.id='lh-view-desktop';
+            if($('#lh-view-mobile'))return;
+            var b=document.createElement('button');b.type='button';b.id='lh-view-mobile';b.className='btn ghost';
+            b.style.cssText='width:100%;justify-content:center;margin-top:4px';b.textContent='📱 Xem bản điện thoại';
+            b.addEventListener('click',function(){
+              setSettings(false);
+              try{localStorage.setItem('lhm_view_mode','mobile')}catch(e){}
+              if(window.lhmV3&&typeof window.lhmV3.applyView==='function')window.lhmV3.applyView('mobile');
+              else{var pill=$('#lhmPill');if(pill)pill.click()}
+            });
+            slot.appendChild(b);
           }
           function buildDesktopGear(){
             if($('#lh-desktop-gear'))return;
@@ -10677,15 +10875,22 @@ body.in-land #in-overlay .inp-thanks{display:none}
               '<div class="lh-login-bg" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>'+
               '<button type="button" class="lh-login-close" id="lh-login-close" aria-label="Đóng bản xem trước">×</button>'+
               '<div class="lh-login-stage"><section class="lh-login-card" role="dialog" aria-modal="true" aria-labelledby="lh-login-title">'+
-                '<div class="lh-login-lock">'+lockSVG+'</div><h2 id="lh-login-title">Welcome</h2><p class="lh-login-sub" id="lh-login-sub">Login to continue your journey</p>'+
-                '<form id="lh-login-form" novalidate>'+
-                  '<label class="lh-sr-only" for="lh-login-email">Email Address</label><div class="lh-login-field"><input id="lh-login-email" type="email" placeholder="Email Address" autocomplete="email"></div>'+
-                  '<label class="lh-sr-only" for="lh-login-password">Password</label><div class="lh-login-field"><input id="lh-login-password" data-password type="password" placeholder="Password" autocomplete="current-password"><button type="button" class="lh-login-eye" id="lh-login-eye" aria-label="Hiện mật khẩu">'+eyeSVG+'</button></div>'+
-                  '<div class="lh-login-field" id="lh-login-confirm-wrap" hidden><label class="lh-sr-only" for="lh-login-confirm">Confirm Password</label><input id="lh-login-confirm" data-password type="password" placeholder="Confirm Password" autocomplete="new-password"></div>'+
-                  '<div class="lh-login-options" id="lh-login-options"><label class="lh-login-remember"><input id="lh-login-remember" type="checkbox"><span class="lh-login-check"></span><span>Remember me</span></label><button type="button" class="lh-login-forgot" id="lh-login-forgot">Forgot Password?</button></div>'+
-                  '<button type="submit" class="lh-login-submit" id="lh-login-submit">Login</button><div class="lh-login-status" id="lh-login-status" aria-live="polite"></div>'+
-                '</form><div class="lh-login-signup"><span id="lh-login-signup-text">Don&#39;t have an account?</span><button type="button" class="lh-login-plus" id="lh-login-plus" aria-label="Chuyển sang đăng ký">+</button></div>'+
-              '</section><div class="lh-login-preview-note">Bản xem trước giao diện · chưa xác thực tài khoản</div></div>';
+                '<div class="lh-login-window-dots" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>'+
+                '<div class="lh-login-visual" aria-hidden="true"><div class="lh-login-visual-brand">LÁNG HẠ <span>NEON WORKSPACE</span></div>'+
+                  '<svg class="lh-neon-lamp" viewBox="0 0 420 390" fill="none"><defs><radialGradient id="lh-neon-aura"><stop stop-color="#22f7a2" stop-opacity=".32"/><stop offset="1" stop-color="#22f7a2" stop-opacity="0"/></radialGradient><linearGradient id="lh-neon-beam" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#74ffd0" stop-opacity=".38"/><stop offset="1" stop-color="#30d991" stop-opacity="0"/></linearGradient><linearGradient id="lh-neon-metal" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#27332f"/><stop offset=".5" stop-color="#080d0c"/><stop offset="1" stop-color="#1b2723"/></linearGradient><filter id="lh-neon-glow"><feGaussianBlur stdDeviation="5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>'+
+                  '<ellipse cx="205" cy="190" rx="195" ry="175" fill="url(#lh-neon-aura)"/><g class="lh-lamp-light"><path d="M150 156 72 338h254L226 156Z" fill="url(#lh-neon-beam)"/><ellipse cx="189" cy="161" rx="61" ry="16" fill="#7affd3" opacity=".9" filter="url(#lh-neon-glow)"/></g>'+
+                  '<path d="M135 309 197 190 251 91" stroke="#080d0c" stroke-width="14" stroke-linecap="round"/><path d="M135 309 197 190 251 91" stroke="#3d5149" stroke-width="3" stroke-linecap="round"/><path d="m158 315 45-125" stroke="#0a100e" stroke-width="13" stroke-linecap="round"/><path d="m158 315 45-125" stroke="#34473f" stroke-width="3" stroke-linecap="round"/>'+
+                  '<circle cx="197" cy="190" r="12" fill="#0b110f" stroke="#a88b52" stroke-width="5"/><circle cx="251" cy="91" r="11" fill="#0b110f" stroke="#a88b52" stroke-width="5"/><path d="M134 130c14-52 63-78 110-46 29 20 42 52 45 79-40 19-103 19-155-33Z" fill="url(#lh-neon-metal)" stroke="#3d5048" stroke-width="3"/><path d="M133 130c39 34 104 47 156 33-14 27-52 36-91 27-37-8-59-30-65-60Z" fill="#123f30" stroke="#62efba" stroke-width="3" filter="url(#lh-neon-glow)"/><path d="M105 328c28-16 86-17 115 0l15 15c-44 15-107 15-146 0l16-15Z" fill="url(#lh-neon-metal)" stroke="#3b4a44" stroke-width="3"/><ellipse cx="162" cy="346" rx="79" ry="13" fill="#020605" opacity=".65"/></svg>'+
+                  '<div class="lh-login-visual-copy"><b>Quản lý nhịp nhàng.<br>Số liệu luôn rõ ràng.</b><span>Một không gian làm việc yên tĩnh cho kho Láng Hạ.</span></div></div>'+
+                '<div class="lh-login-form-side"><div class="lh-login-lock">'+lockSVG+'</div><h2 id="lh-login-title">Welcome</h2><p class="lh-login-sub" id="lh-login-sub">Login to continue your journey</p>'+
+                  '<form id="lh-login-form" novalidate>'+
+                    '<label class="lh-sr-only" for="lh-login-email">Email Address</label><div class="lh-login-field"><input id="lh-login-email" type="email" placeholder="Email Address" autocomplete="email"></div>'+
+                    '<label class="lh-sr-only" for="lh-login-password">Password</label><div class="lh-login-field"><input id="lh-login-password" data-password type="password" placeholder="Password" autocomplete="current-password"><button type="button" class="lh-login-eye" id="lh-login-eye" aria-label="Hiện mật khẩu">'+eyeSVG+'</button></div>'+
+                    '<div class="lh-login-field" id="lh-login-confirm-wrap" hidden><label class="lh-sr-only" for="lh-login-confirm">Confirm Password</label><input id="lh-login-confirm" data-password type="password" placeholder="Confirm Password" autocomplete="new-password"></div>'+
+                    '<div class="lh-login-options" id="lh-login-options"><label class="lh-login-remember"><input id="lh-login-remember" type="checkbox"><span class="lh-login-check"></span><span>Remember me</span></label><button type="button" class="lh-login-forgot" id="lh-login-forgot">Forgot Password?</button></div>'+
+                    '<button type="submit" class="lh-login-submit" id="lh-login-submit">Login</button><div class="lh-login-status" id="lh-login-status" aria-live="polite"></div>'+
+                  '</form><div class="lh-login-signup"><span id="lh-login-signup-text">Don&#39;t have an account?</span><button type="button" class="lh-login-plus" id="lh-login-plus" aria-label="Chuyển sang đăng ký">+</button></div>'+
+                '</div></section><div class="lh-login-preview-note">Bản xem trước giao diện · chưa xác thực tài khoản</div></div>';
             document.body.appendChild(w);
             w.addEventListener('click',function(e){if(e.target===w)closeLogin()});
             $('#lh-login-close').addEventListener('click',closeLogin);
@@ -10723,14 +10928,282 @@ body.in-land #in-overlay .inp-thanks{display:none}
           }
           function init(){
             try{if(window.lhmV3&&typeof window.lhmV3.buildSettings==='function')window.lhmV3.buildSettings()}catch(e){}
-            buildFab();buildDesktopGear();addLoginSettings();buildLogin();
+            buildFab();buildDesktopGear();addLoginSettings();addViewSettings();buildLogin();placeFab();
           }
           document.addEventListener('keydown',function(e){if(e.key!=='Escape')return;var w=$('#lh-login-ui');if(w&&w.classList.contains('on')){closeLogin();return}var set=$('#lhmSet');if(set&&set.classList.contains('on'))setSettings(false)});
+          new MutationObserver(placeFab).observe(document.body,{attributes:true,attributeFilter:['class']});
           init();setTimeout(init,0);
           window.lhQuickUI={openLogin:openLogin,closeLogin:closeLogin,openSettings:function(){setSettings(true)},closeSettings:function(){setSettings(false)}};
         })();
         </script>
 
-<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a4f89b785f64f57a',t:'MTc5Mjg0MDk4NA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+
+        <style id="lh-staff-sticky-css">
+          body:not(.lhm-mode) header{position:sticky;top:0}
+          body:not(.lhm-mode) #tab-nhansu > .lhm-ns-panel{position:sticky;top:var(--lh-main-header-h,126px);z-index:35;background:var(--card)}
+          body.lhm-mode #tab-nhansu > .lhm-ns-panel{position:sticky;top:var(--lh-sheet-head-h,80px);z-index:25;background:var(--card)}
+          @media print{body:not(.lhm-mode) #tab-nhansu > .lhm-ns-panel,body.lhm-mode #tab-nhansu > .lhm-ns-panel{position:static}}
+        </style>
+        <script id="lh-staff-sticky-js">
+        (function(){
+          function syncHeaderHeight(){
+            var h=document.querySelector('header');if(!h)return;
+            var px=Math.ceil(h.getBoundingClientRect().height);
+            if(px>0)document.documentElement.style.setProperty('--lh-main-header-h',px+'px');
+            var sh=document.querySelector('#tab-nhansu > .lh-sheet-head');
+            if(sh){var sp=Math.ceil(sh.getBoundingClientRect().height);if(sp>0)document.documentElement.style.setProperty('--lh-sheet-head-h',sp+'px');}
+          }
+          syncHeaderHeight();setTimeout(syncHeaderHeight,60);setTimeout(syncHeaderHeight,300);
+          window.addEventListener('resize',syncHeaderHeight);
+          new MutationObserver(syncHeaderHeight).observe(document.body,{attributes:true,attributeFilter:['class']});
+          var h=document.querySelector('header');
+          if(h&&window.ResizeObserver)new ResizeObserver(syncHeaderHeight).observe(h);
+        })();
+        </script>
+<style id="lh-neon-glass-catalog-css">
+/* Danh mục chỉ hiện thao tác thay đổi dữ liệu sau mật khẩu. */
+#tab-danhmuc.dm-locked [data-dm-add],#tab-danhmuc.dm-locked [data-dm-edit],#tab-danhmuc.dm-locked [data-dm-del],#tab-danhmuc.dm-locked .dm-actions,#tab-danhmuc.dm-locked .dm-editor{display:none!important}
+#tab-danhmuc .dm-top-actions{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:wrap}
+#tab-danhmuc #dm-lock-btn{min-height:38px;white-space:nowrap}
+#tab-danhmuc #dm-save-status[data-cloud="ok"]{border-color:rgba(80,200,150,.42);color:#79d9ae;background:rgba(35,130,90,.12)}
+#tab-danhmuc #dm-save-status[data-cloud="bad"]{border-color:rgba(255,150,150,.42);color:#ffaaaa;background:rgba(150,45,55,.12)}
+#tab-danhmuc #dm-save-status[data-cloud="sync"]{color:#9dccff}
+@media(max-width:600px){#tab-danhmuc .dm-top-actions{width:100%;justify-content:flex-start}#tab-danhmuc #dm-lock-btn{flex:1}}
+
+/* Preview neon lamp — design only, không dùng để khóa ứng dụng. */
+#lh-login-ui{background:#020807;color:#d9eee6;font-family:Inter,Segoe UI,Arial,sans-serif}
+#lh-login-ui .lh-login-bg{background:radial-gradient(circle at 20% 35%,#09231b 0,transparent 38%),radial-gradient(circle at 85% 70%,#071b20 0,transparent 35%),linear-gradient(135deg,#03090b,#020605 70%)}
+#lh-login-ui .lh-login-bg i{background:radial-gradient(circle at 35% 30%,rgba(35,235,162,.16),rgba(3,15,12,.05) 65%);box-shadow:0 0 90px rgba(21,220,143,.09);opacity:.75}
+#lh-login-ui .lh-login-card{position:relative;width:min(920px,100%);max-width:100%;padding:0;display:grid;grid-template-columns:1.15fr .85fr;border:1px solid rgba(130,255,207,.2);border-radius:18px;overflow:hidden;background:rgba(4,12,13,.9);box-shadow:0 30px 100px rgba(0,0,0,.65),0 0 50px rgba(32,220,150,.06),inset 0 1px rgba(255,255,255,.04);-webkit-backdrop-filter:blur(22px);backdrop-filter:blur(22px);text-align:left}
+#lh-login-ui .lh-login-window-dots{position:absolute;right:17px;top:15px;z-index:5;display:flex;gap:6px}
+#lh-login-ui .lh-login-window-dots i{width:7px;height:7px;border-radius:50%;background:#f5a623;box-shadow:0 0 8px currentColor}
+#lh-login-ui .lh-login-window-dots i:nth-child(2){background:#ef6363}#lh-login-ui .lh-login-window-dots i:nth-child(3){background:#efd35b}#lh-login-ui .lh-login-window-dots i:nth-child(4){background:#46d997}#lh-login-ui .lh-login-window-dots i:nth-child(5){background:#68a7d8}
+#lh-login-ui .lh-login-visual{position:relative;min-height:535px;overflow:hidden;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at 48% 42%,rgba(13,92,63,.35),transparent 43%),linear-gradient(145deg,rgba(9,25,23,.94),rgba(2,8,9,.98));border-right:1px solid rgba(130,255,207,.1)}
+#lh-login-ui .lh-login-visual:before{content:"";position:absolute;inset:0;background-image:linear-gradient(rgba(120,255,206,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(120,255,206,.025) 1px,transparent 1px);background-size:32px 32px;mask-image:linear-gradient(to bottom,black,transparent 85%)}
+#lh-login-ui .lh-login-visual-brand{position:absolute;left:24px;top:23px;z-index:2;color:#c4d8d0;font-size:11px;font-weight:800;letter-spacing:2px}
+#lh-login-ui .lh-login-visual-brand span{display:block;margin-top:5px;color:#49dba1;font-size:8px;letter-spacing:2.6px}
+#lh-login-ui .lh-neon-lamp{position:relative;z-index:1;width:min(92%,440px);height:auto;transform:translateY(-12px)}
+#lh-login-ui .lh-lamp-light{animation:lhLampPulse 3.4s ease-in-out infinite}
+@keyframes lhLampPulse{0%,100%{opacity:1}50%{opacity:.7}}
+#lh-login-ui .lh-login-visual-copy{position:absolute;left:26px;bottom:24px;z-index:2;display:grid;gap:7px}
+#lh-login-ui .lh-login-visual-copy b{color:#d9f8eb;font-size:18px;line-height:1.35;letter-spacing:-.3px;text-shadow:0 0 22px rgba(68,230,166,.18)}
+#lh-login-ui .lh-login-visual-copy span{max-width:300px;color:#6f9183;font-size:10px;line-height:1.5}
+#lh-login-ui .lh-login-form-side{display:flex;flex-direction:column;justify-content:center;min-width:0;padding:48px 34px 30px;background:linear-gradient(160deg,rgba(12,24,24,.82),rgba(4,11,12,.94))}
+#lh-login-ui .lh-login-lock{width:44px;height:44px;margin:0 0 17px;border:1px solid rgba(82,238,177,.25);border-radius:13px;color:#65ebb5;background:rgba(34,155,108,.09);box-shadow:0 0 24px rgba(45,220,150,.1),inset 0 1px rgba(255,255,255,.05)}
+#lh-login-ui .lh-login-lock svg{width:21px;height:21px}
+#lh-login-ui .lh-login-card h2{color:#effbf6;font-size:28px;letter-spacing:-.8px;text-shadow:0 0 25px rgba(107,255,196,.12)}
+#lh-login-ui .lh-login-sub{margin:8px 0 22px;color:#718d81;font-size:11px}
+#lh-login-ui .lh-login-field{margin-top:13px}
+#lh-login-ui .lh-login-field input{height:47px;padding:0 14px;border:1px solid rgba(129,180,159,.14);border-radius:9px;background:rgba(0,5,6,.45);color:#d8eee5;font-size:12px;box-shadow:inset 0 1px 8px rgba(0,0,0,.3)}
+#lh-login-ui .lh-login-field input::placeholder{color:#4f6c60}
+#lh-login-ui .lh-login-field input:focus{border-color:rgba(69,232,166,.55);box-shadow:0 0 0 3px rgba(45,220,150,.08),0 0 22px rgba(45,220,150,.08)}
+#lh-login-ui .lh-login-eye{color:#66877a}
+#lh-login-ui .lh-login-options{color:#6e8a7d;font-size:9.5px}
+#lh-login-ui .lh-login-remember{color:#6e8a7d}
+#lh-login-ui .lh-login-check{border-color:#355c4b;background:#07110e;box-shadow:none}
+#lh-login-ui .lh-login-remember input:checked+.lh-login-check{background:#27c985;border-color:#27c985;box-shadow:0 0 10px rgba(39,201,133,.35)}
+#lh-login-ui .lh-login-forgot{color:#52ba90}
+#lh-login-ui .lh-login-submit{height:47px;margin-top:21px;border:1px solid rgba(128,255,206,.35);border-radius:9px;background:linear-gradient(100deg,#20bd7c,#36dda0);color:#022218;font-size:12px;letter-spacing:.2px;box-shadow:0 8px 25px rgba(23,190,124,.2),0 0 20px rgba(50,230,158,.12)}
+#lh-login-ui .lh-login-submit:hover{color:#011a10;box-shadow:0 10px 32px rgba(23,210,136,.32),0 0 25px rgba(50,230,158,.18)}
+#lh-login-ui .lh-login-submit:active{box-shadow:inset 0 2px 8px rgba(0,60,35,.25)}
+#lh-login-ui .lh-login-status{color:#71c9a5}
+#lh-login-ui .lh-login-signup{color:#637f72;font-size:10px}
+#lh-login-ui .lh-login-plus{width:31px;height:31px;border:1px solid rgba(79,211,157,.25);border-radius:9px;background:rgba(22,110,76,.12);color:#5ddda8;box-shadow:none}
+#lh-login-ui .lh-login-preview-note{padding:8px 14px;border:1px solid rgba(109,180,151,.12);background:rgba(4,17,14,.7);color:#5e7d6f;box-shadow:0 8px 25px rgba(0,0,0,.25)}
+#lh-login-ui .lh-login-close{border:1px solid rgba(109,180,151,.2);background:rgba(4,17,14,.8);color:#7ca392;box-shadow:0 8px 25px rgba(0,0,0,.35)}
+@media(max-width:700px){
+  #lh-login-ui{padding:52px 15px 20px}
+  #lh-login-ui .lh-login-card{width:100%;grid-template-columns:1fr;border-radius:17px}
+  #lh-login-ui .lh-login-visual{min-height:205px;border-right:0;border-bottom:1px solid rgba(130,255,207,.1)}
+  #lh-login-ui .lh-login-visual-brand{left:18px;top:17px;font-size:9px}
+  #lh-login-ui .lh-neon-lamp{position:absolute;width:210px;max-height:205px;left:50%;top:4px;transform:translateX(-50%)}
+  #lh-login-ui .lh-login-visual-copy{display:none}
+  #lh-login-ui .lh-login-form-side{padding:24px 25px 23px}
+  #lh-login-ui .lh-login-lock{width:38px;height:38px;margin-bottom:12px}
+  #lh-login-ui .lh-login-card h2{font-size:24px}
+  #lh-login-ui .lh-login-sub{margin-bottom:15px}
+  #lh-login-ui .lh-login-field{margin-top:10px}
+  #lh-login-ui .lh-login-submit{margin-top:16px}
+  #lh-login-ui .lh-login-signup{margin-top:16px}
+}
+@media(max-height:690px) and (min-width:701px){#lh-login-ui .lh-login-card{grid-template-columns:1fr .9fr}#lh-login-ui .lh-login-visual{min-height:480px}#lh-login-ui .lh-login-form-side{padding-top:30px}}
+@media(prefers-reduced-motion:reduce){#lh-login-ui .lh-lamp-light{animation:none}}
+
+/* Glassmorphism + gradient cho tên ứng dụng và tiêu đề nội dung. */
+header .brand h1,main .tab .card h2:not(:has(button)):not(:has(input)):not(:has(select)),.lh-sheet-title{
+  --lh-title-colors:linear-gradient(100deg,#88c8ff 0%,#c7a5ff 48%,#82e6dd 100%);
+  --lh-title-glass:linear-gradient(120deg,rgba(125,151,255,.13),rgba(200,143,255,.08) 52%,rgba(114,222,215,.06));
+  --lh-title-border:rgba(176,179,255,.2);
+  position:relative;width:fit-content;max-width:100%;padding:7px 12px;border:1px solid var(--lh-title-border);border-radius:13px;
+  color:transparent!important;-webkit-text-fill-color:transparent;background-image:var(--lh-title-colors),var(--lh-title-glass);
+  background-size:180% auto,100% 100%;background-position:0 center,0 0;-webkit-background-clip:text,padding-box;background-clip:text,padding-box;
+  box-shadow:inset 0 1px rgba(255,255,255,.12),0 7px 22px rgba(18,25,60,.09);-webkit-backdrop-filter:blur(14px) saturate(140%);backdrop-filter:blur(14px) saturate(140%);
+  text-shadow:0 0 22px rgba(150,140,255,.14);animation:lhGlassTitle 10s ease-in-out infinite alternate
+}
+header .brand h1{padding:5px 10px;--lh-title-colors:linear-gradient(100deg,#c5e4ff,#e1caff 52%,#b1f5e8);--lh-title-glass:linear-gradient(120deg,rgba(255,255,255,.09),rgba(156,130,255,.08))}
+.lh-sheet-title{width:auto;padding:6px 10px}
+html[data-theme="light"] main .tab .card h2:not(:has(button)):not(:has(input)):not(:has(select)),html[data-theme="light"] .lh-sheet-title{
+  --lh-title-colors:linear-gradient(100deg,#245ba7,#7c43b5 52%,#147d80);--lh-title-glass:linear-gradient(120deg,rgba(102,138,225,.1),rgba(183,125,223,.07));--lh-title-border:rgba(88,100,170,.17);text-shadow:none
+}
+@keyframes lhGlassTitle{to{background-position:100% center,0 0}}
+@media(prefers-reduced-motion:reduce){header .brand h1,main .tab .card h2,.lh-sheet-title{animation:none}}
+@media(max-width:600px){main .tab .card h2:not(:has(button)):not(:has(input)):not(:has(select)){padding:6px 10px}}
+@media print{header .brand h1,main .tab .card h2,.lh-sheet-title{padding:0!important;color:#000!important;-webkit-text-fill-color:#000!important;background:none!important;text-shadow:none!important;animation:none!important}header .brand h1::before,main .tab .card h2::before,.lh-sheet-title::before{display:none!important}}
+</style>
+<style id="lh-excel-progress-css">
+.lh-xlsx-progress{margin:12px 0;padding:12px 13px;border:1px solid var(--line);border-radius:13px;background:rgba(80,120,180,.08);box-shadow:inset 0 1px rgba(255,255,255,.05)}
+.lh-xlsx-progress-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;font-size:12px;line-height:1.45}
+.lh-xlsx-progress-top span{min-width:0;overflow-wrap:anywhere}.lh-xlsx-progress-top b{flex:0 0 auto;font-size:14px;font-variant-numeric:tabular-nums;color:#9dc8ff}
+.lh-xlsx-track{height:10px;margin-top:9px;overflow:hidden;border-radius:999px;background:rgba(10,25,45,.35);box-shadow:inset 0 1px 3px rgba(0,0,0,.25)}
+.lh-xlsx-fill{width:0;height:100%;border-radius:inherit;background:linear-gradient(90deg,#4e8fe8,#72c4ff);box-shadow:0 0 14px rgba(90,170,255,.35);transition:width .16s ease}
+.lh-xlsx-progress[data-state="busy"] .lh-xlsx-fill{background-image:linear-gradient(90deg,#4e8fe8,#72c4ff,#4e8fe8);background-size:200% 100%;animation:lhXlsxMove 1.4s linear infinite}
+.lh-xlsx-progress[data-state="ok"]{border-color:rgba(70,190,130,.45);background:rgba(35,145,90,.1)}.lh-xlsx-progress[data-state="ok"] .lh-xlsx-fill{background:linear-gradient(90deg,#27a86a,#69daa1)}.lh-xlsx-progress[data-state="ok"] .lh-xlsx-progress-top b{color:#79dba7}
+.lh-xlsx-progress[data-state="bad"]{border-color:rgba(255,130,140,.5);background:rgba(165,45,55,.12)}.lh-xlsx-progress[data-state="bad"] .lh-xlsx-fill{background:linear-gradient(90deg,#c64b59,#ef8992)}.lh-xlsx-progress[data-state="bad"] .lh-xlsx-progress-top b{color:#ffabb2}
+.lh-xlsx-progress .hint{margin:8px 0 0;font-size:11px;overflow-wrap:anywhere}
+@keyframes lhXlsxMove{to{background-position:-200% 0}}
+@media(prefers-reduced-motion:reduce){.lh-xlsx-progress[data-state="busy"] .lh-xlsx-fill{animation:none}.lh-xlsx-fill{transition:none}}
+@media(max-width:520px){.lh-xlsx-progress{padding:11px}.lh-xlsx-progress-top{font-size:11.5px}}
+@media print{.lh-xlsx-progress{display:none!important}}
+</style>
+<style id="lh-table-contrast-align-css">
+/* Toàn bộ bảng: nền xanh navy/xám xanh trầm, ít chói; chữ sáng dịu nhưng tương phản cao. */
+@media screen{
+  :root{
+    --lh-table-text:#edf3fa;--lh-table-muted:#bdcbd9;--lh-table-head:#f3f7fb;
+    --lh-table-head-bg:#1c324b;--lh-table-row:#263d56;--lh-table-alt:#2c445f;
+    --lh-table-hover:#354f6c;--lh-table-border:#4a647e
+  }
+  html[data-theme="dark"]{
+    --lh-table-text:#edf3fa;--lh-table-muted:#bdcbd9;--lh-table-head:#f3f7fb;
+    --lh-table-head-bg:#172b42;--lh-table-row:#1f344d;--lh-table-alt:#253b55;
+    --lh-table-hover:#2d4763;--lh-table-border:#435e78
+  }
+  body table{
+    /* Mọi thành phần con trong bảng dùng cùng palette tối, kể cả khi toàn trang đang ở theme sáng. */
+    --blue:#547ba5;--blue-d:#aecbff;--blue-l:#2c445f;--line:var(--lh-table-border);
+    --ink:var(--lh-table-text);--ink-2:var(--lh-table-muted);--bg:var(--lh-table-row);--card:var(--lh-table-row);
+    --red:#ffb4b4;--red-l:#563638;--amber:#f0cf83;--amber-l:#50452c;--green:#a8e4bf;--green-l:#2c4938;
+    color-scheme:dark;color:var(--lh-table-text);background-color:var(--lh-table-row)!important
+  }
+  body table .btn{background:#3d5d82;color:#f4f8fc;border-color:#6f8dad}
+  body table .btn:hover{background:#4c6f94;color:#fff;border-color:#8aa6bf}
+  body table .btn.ghost{background:#2c445f;color:#dbe8f4}
+  body table .btn.ghost:hover{background:#3a5875;color:#f3f7fb}
+  body table th{
+    color:var(--lh-table-head)!important;background-color:var(--lh-table-head-bg)!important;
+    border-bottom-color:var(--lh-table-border)!important
+  }
+  body table thead th:hover{background-color:var(--lh-table-hover)!important}
+  body table tbody tr>td,body table tbody tr>th{
+    background-color:var(--lh-table-row);border-bottom-color:var(--lh-table-border)
+  }
+  body table tbody tr:nth-child(even)>td,body table tbody tr:nth-child(even)>th{background-color:var(--lh-table-alt)}
+  body table tbody tr:hover>td,body table tbody tr:hover>th{background-color:var(--lh-table-hover)}
+  body table tfoot>tr>td,body table tfoot>tr>th{
+    color:var(--lh-table-text);background-color:var(--lh-table-alt);border-color:var(--lh-table-border)
+  }
+  body table tbody tr.sumrow>td,body table tbody .sumrow>td,
+  body table tbody tr.tt-tong>td,body table tbody .tt-tong>td{
+    color:var(--lh-table-text)!important;background-color:var(--lh-table-hover)!important;border-top-color:var(--lh-table-border)!important
+  }
+  body table th,body table td{vertical-align:middle}
+  body table .dim,body table.kv td:first-child{color:var(--lh-table-muted)}
+  body table thead th .ar{color:#b9d9f2;opacity:.72}
+  body table thead th.sorted .ar{color:#b9d9f2;opacity:1}
+  body table code{background:#1a2d43!important;color:#dbe8f4!important;border:1px solid #435e78}
+  body table a:not(.btn):not(.button){color:#b9d9f2}
+  body table a:not(.btn):not(.button):visited{color:#d2c4e8}
+  body table .num,body table .dm-num,body table .money,body table .nx-money{font-variant-numeric:tabular-nums}
+
+  /* Bảng Excel: giữ màu trạng thái nhưng chuyển thành các tông trầm, không còn nền huỳnh quang. */
+  #tab-banhang .bh-table th,#tab-banhang .bh-table td{
+    color:var(--lh-table-text);background-color:var(--lh-table-row);border-color:var(--lh-table-border)!important
+  }
+  #tab-banhang .bh-table tbody tr:nth-child(even)>td{background-color:var(--lh-table-alt)}
+  #tab-banhang .bh-table tbody tr:hover>td{background-color:var(--lh-table-hover)}
+  #tab-banhang .bh-table .bh-cap{background:var(--lh-table-head-bg)!important;color:#f1e5b5!important}
+  #tab-banhang .bh-table .bh-yellow{background:#5a512e!important;color:#fff7d6!important}
+  #tab-banhang .bh-table .bh-pink{background:#633c52!important;color:#ffedf5!important}
+  #tab-banhang .bh-table .bh-red{background:#8b3535!important;color:#fff1f1!important}
+  #tab-banhang .bh-table .bh-navy{background:#1d3a5c!important;color:#eff6ff!important}
+  #tab-banhang .bh-table .bh-blue{background:#315472!important;color:#eff7ff!important}
+  #tab-banhang .bh-table .bh-peach{background:#5b493c!important;color:#fff1e8!important}
+  #tab-banhang .bh-table .bh-total-label{background:var(--lh-table-row)!important;color:var(--lh-table-text)!important}
+  #tab-banhang .bh-table .bh-action{background:var(--lh-table-alt)!important}
+  #tab-banhang .bh-table .bh-action button{background:#34516e;color:#f2f6fb;border:1px solid #607d98}
+  #tab-banhang .bh-table .bh-rowid{background:var(--lh-table-alt)!important;color:#d6e3ef!important}
+  #tab-banhang .bh-table thead .bh-rowid{background:var(--lh-table-head-bg)!important}
+  #tab-banhang .bh-table td.bh-sl,#tab-banhang .bh-table td.bh-vodung,
+  #tab-banhang .bh-table td.bh-fill-yellow{background:#5a512e!important;color:#fff7d6!important}
+  #tab-banhang .bh-table td.bh-code{background:#2f553f!important;color:#e5f6ea!important}
+  #tab-banhang .bh-table td.bh-vokhac,#tab-banhang .bh-table td.bh-tenvo,
+  #tab-banhang .bh-table td.bh-novo{background:#315472!important;color:#eff7ff!important}
+  #tab-banhang .bh-table td.bh-address{background:#5b493c!important;color:#fff1e8!important}
+  #tab-banhang .bh-table td.bh-money{color:#d6e9fa!important}
+  #tab-banhang .bh-table td.bh-negative{color:#ffb8b8!important}
+  #tab-banhang .bh-table td.bh-id{color:var(--lh-table-text)!important}
+  #tab-banhang .bh-table td.bh-invoice-cell{background:var(--lh-table-alt)!important}
+  #tab-banhang .bh-inv-input{color:var(--lh-table-text);border-color:#71879b;background:transparent}
+  #tab-banhang .bh-inv-input::placeholder{color:var(--lh-table-muted)}
+  #tab-banhang .bh-inv-input:hover,#tab-banhang .bh-inv-input:focus{background:var(--lh-table-hover);color:var(--lh-table-text)}
+  #tab-banhang .bh-inv-input:focus{outline-color:#9fc8ee}
+  #tab-banhang .bh-table .bh-action button:hover{background:#405f7e;color:#f7fafc}
+  #tab-banhang .bh-table .bh-filter-row th,#tab-banhang .bh-table .bh-filter-row th.bh-rowid{
+    background:var(--lh-table-head-bg)!important;color:var(--lh-table-head)!important
+  }
+  #tab-banhang .bh-col-filter{background:#2c465f;color:#dbe8f4;border-color:#607a92}
+  #tab-banhang .bh-col-filter:hover{background:#3a5875;color:#f3f7fb;border-color:#86a4bd}
+  #tab-banhang .bh-col-filter.is-active{background:#3b6288;color:#f4f8fc;border-color:#88a9c6}
+
+  /* Bản xem hóa đơn trên màn hình cùng tông xanh; @media print vẫn giữ bản in nền giấy. */
+  .inp-paper .inp-table{background:var(--lh-table-row)!important;color:var(--lh-table-text)!important}
+  .inp-paper .inp-table th{
+    background:var(--lh-table-head-bg)!important;color:var(--lh-table-head)!important;border-color:var(--lh-table-border)!important
+  }
+  .inp-paper .inp-table td{
+    background:var(--lh-table-row)!important;color:var(--lh-table-text)!important;border-color:var(--lh-table-border)!important
+  }
+  .inp-paper .inp-table tbody tr{background:var(--lh-table-row)!important}
+  .inp-paper .inp-table tbody tr:nth-child(even) td{background:var(--lh-table-alt)!important}
+  .inp-paper .inp-table tfoot td{background:var(--lh-table-alt)!important}
+  .inp-paper .inp-table .dim{color:var(--lh-table-muted)!important}
+
+  /* Lịch sử giao hàng và Thu/Chi: ghi đè cả các rule theme sáng cũ. */
+  #tab-giao .gh-tbl tbody td{color:var(--lh-table-text);background:var(--lh-table-row);border-bottom-color:var(--lh-table-border)}
+  #tab-giao .gh-tbl tbody tr:nth-child(even) td{background:var(--lh-table-alt)}
+  #tab-giao .gh-tbl tbody tr:hover td{background:var(--lh-table-hover)}
+  #tab-giao .gh-tbl td b{color:var(--lh-table-head)}
+  #tab-giao .gh-hang{color:#d6e3ef!important}
+  #tab-giao .gh-sub{color:var(--lh-table-muted)}
+  #tab-giao .gh-no{color:#ffd479!important;background:#5a4b2c!important}
+  #tab-giao .gh-badge{background:#2c4157;color:#d6e3ef;border-color:#667f98}
+  #tab-giao .gh-badge.new{background:#2f553f;color:#b7edce;border-color:#64937a}
+  #tab-giao .gh-badge.edt{background:#5a4b2c;color:#f4d98e;border-color:#92753c}
+  #tab-giao .gh-acts .btn{background:#3d5d82;color:#f4f8fc;border-color:#6f8dad}
+  #tab-giao .gh-acts .btn:hover{background:#4c6f94;color:#fff;border-color:#8aa6bf}
+  #tab-giao .gh-in,#tab-giao .gh-nvsel{background:#243b55;color:#edf3fa;border-color:#688198;box-shadow:none}
+  #tab-giao .gh-in:focus,#tab-giao .gh-nvsel:focus{background:#2d4763;color:#f3f7fb;border-color:#9dbbe8}
+  #tab-giao .gh-in:disabled,#tab-giao .gh-nvsel:disabled{background:#2b3b4d;color:#a5b4c4}
+  #tab-giao .gh-nvsel option{background:#243b55;color:#edf3fa}
+  #tab-tc .tw{background:var(--lh-table-row)!important;border-color:var(--lh-table-border)!important}
+  #tab-tc .tc-tbl tbody td{color:var(--lh-table-text)!important;background:var(--lh-table-row)!important;border-bottom-color:var(--lh-table-border)!important}
+  #tab-tc .tc-tbl tbody tr:nth-child(even) td{background:var(--lh-table-alt)!important}
+  #tab-tc .tc-tbl tbody tr:hover td{background:var(--lh-table-hover)!important}
+  #tab-tc .tc-tbl .tc-thu{color:#a8e4bf!important}
+  #tab-tc .tc-tbl .tc-chi{color:#ffc29a!important}
+
+  /* Danh mục: nền đồng bộ và giữ header/dữ liệu cùng căn lề. */
+  #tab-danhmuc .dm-table{color:var(--lh-table-text);background-color:var(--lh-table-row)!important}
+  #tab-danhmuc .dm-table th{
+    color:var(--lh-table-head)!important;background:var(--lh-table-head-bg)!important;border-bottom-color:var(--lh-table-border)!important
+  }
+  #tab-danhmuc .dm-table td{color:var(--lh-table-text);overflow-wrap:anywhere;border-bottom-color:var(--lh-table-border)}
+  #tab-danhmuc .dm-table th.dm-num,#tab-danhmuc .dm-table td.dm-num,
+  #tab-danhmuc .dm-table th.dm-actions,#tab-danhmuc .dm-table td.dm-actions{text-align:right;font-variant-numeric:tabular-nums}
+  #tab-danhmuc .dm-table th:not(.dm-num):not(.dm-actions),#tab-danhmuc .dm-table td:not(.dm-num):not(.dm-actions){text-align:left}
+  #tab-danhmuc .dm-table .dm-empty{text-align:center;color:var(--lh-table-muted)!important}
+}
+</style>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a4f92855be3903ad',t:'MTc5Mjg0Njc1NA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 
 </html>
