@@ -11515,7 +11515,7 @@ const CSV_SHEETS_GZ = "H4sIAAAAAAAC/+y9bZNcx3Um+FfucB0eYN2NzvcX+lP1C9BtAE2QKGKpc
   const codeNorm=v=>String(v||"").toUpperCase().replace(/[^A-Z0-9]/g,"");
   const digits=v=>String(v||"").replace(/\D/g,"");
   const nf=new Intl.NumberFormat("vi-VN");
-  const CSV_TAB_NAMES=["Chị Thanh", "CN A Binh va 199MK", "CN Vo-CS1", "Hóa Đơn Công Nợ", "In Phieu", "Kho-CS1", "N-CS1", "PHIEU NPP", "Sổ Qũy 2", "Thong Tin DV", "Thu Chi-CS1", "TT Chung", "TT Hóa Đơn"];
+  const CSV_TAB_NAMES=["TT Chung", "Thong Tin DV", "N-CS1", "Kho-CS1", "CN Vo-CS1", "In Phieu", "Thu Chi-CS1", "Sổ Qũy 2", "TT Hóa Đơn", "CN A Binh va 199MK", "Chị Thanh", "Hóa Đơn Công Nợ", "PHIEU NPP"];
   const csvSheetName=name=>name+" [CSV]";
   const modules={
     overview:{label:"Tổng quan",icon:"▦"},
@@ -11632,8 +11632,10 @@ const CSV_SHEETS_GZ = "H4sIAAAAAAAC/+y9bZNcx3Um+FfucB0eYN2NzvcX+lP1C9BtAE2QKGKpc
       const stream=new Blob([bytes]).stream().pipeThrough(new DecompressionStream("gzip"));
       const packed=JSON.parse(await new Response(stream).text());
       if(!Array.isArray(packed)||packed.length!==13)throw new Error("Gói CSV không đủ 13 sheet");
+      const ordered=CSV_TAB_NAMES.map(name=>packed.find(sheet=>sheet.n===csvSheetName(name)));
+      if(ordered.some(sheet=>!sheet))throw new Error("Gói CSV thiếu sheet theo thứ tự tab Excel");
       const target=data();if(typeof SH!=="undefined"&&!SH.data)SH.data=target;
-      packed.forEach(sheet=>{if(!target.some(s=>s.n===sheet.n))target.push(sheet);});
+      ordered.forEach(sheet=>{if(!target.some(s=>s.n===sheet.n))target.push(sheet);});
       return target;
     })().catch(e=>{csvPromise=null;throw e;});
     return csvPromise;
@@ -12065,6 +12067,6 @@ const CSV_SHEETS_GZ = "H4sIAAAAAAAC/+y9bZNcx3Um+FfucB0eYN2NzvcX+lP1C9BtAE2QKGKpc
 })();
 </script>
 
-</body>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a500c2267d8a85d4',t:'MTc5MjkyNjQ1NA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 
 </html>
