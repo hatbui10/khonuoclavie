@@ -4020,7 +4020,6 @@
             function inPhieuHtml(o){
               const it   = o.items || [];
               const tien = ordTien(o), daThu = +o.daThu || 0, con = Math.max(0, tien - daThu);
-              const vo   = ordNoVo(o);
               const khach = [o.maKH, o.tenKH].filter(Boolean).join(" · ");
               const rows = it.map((x, i) =>
                   '<tr><td class="c">' + (i + 1) + '</td>' +
@@ -4073,11 +4072,6 @@
                 (daThu ? '<tr><td colspan="5" class="r">Đã thu:</td><td class="r">' + nf(daThu) + '</td></tr>' : "") +
                 (daThu ? '<tr><td colspan="5" class="r"><b>Còn phải trả:</b></td><td class="r"><b>' + nf(con) + '</b></td></tr>' : "") +
               '</tfoot></table>' +
-              '<div class="inp-more">' +
-                'Vỏ thu về: <b>' + nf(o.voThu || 0) + '</b> bình/thùng · ' +
-                'Vỏ trả cược: <b>' + nf(o.voTra || 0) + '</b> · ' +
-                'Vỏ khách còn giữ: <b>' + nf(vo) + '</b>' +
-              '</div>' +
               '<div class="inp-foot">' +
                 '<div class="inp-sign"><b>Người lập phiếu</b><em>(Ký, ghi rõ họ tên)</em><div class="inp-space"></div></div>' +
                 '<div class="inp-sign"><b>Số vỏ trả / Nhân viên</b><em>(Ký, ghi rõ họ tên)</em>' +
@@ -4109,7 +4103,7 @@
             
             function inNppHtml(o){
               const items = Array.isArray(o.items) ? o.items : [];
-              const rows = items.map((x,i)=>'<tr><td class="c">'+(i+1)+'</td><td><b>'+esc(x.name||"")+'</b></td><td class="c">'+esc(x.unit||"")+'</td><td class="c">'+esc(x.qty||"")+'</td><td>'+esc(x.note||"")+'</td></tr>').join("") || '<tr><td colspan="5" class="c">(Chưa có mặt hàng)</td></tr>';
+              const rows = items.map((x,i)=>'<tr><td class="c">'+(i+1)+'</td><td class="c npp-name"><b>'+esc(x.name||"")+'</b></td><td class="c">'+esc(x.unit||"")+'</td><td class="c">'+esc(x.qty||"")+'</td><td class="c npp-note">'+esc(x.note||"")+'</td></tr>').join("") || '<tr><td colspan="5" class="c">(Chưa có mặt hàng)</td></tr>';
               const signs = Array.isArray(o.signs) && o.signs.length ? o.signs : ["NPP","LÁI XE","XE NÂNG"];
               return ''+
                 '<div class="npp-top"><div class="npp-company">'+esc(o.company||"")+'</div><div class="npp-code">'+esc(o.code||"")+'</div></div>'+
@@ -4119,7 +4113,7 @@
                   '<div><span class="inp-lb">TÊN NPP :</span> '+esc(o.npp||"")+'</div><div></div>'+
                   '<div><span class="inp-lb">ĐỊA CHỈ :</span> '+esc(o.address||"")+'</div><div><span class="inp-lb">Ngày V/C :</span> <b>'+esc(o.date||todayVN())+'</b></div>'+
                 '</div>'+
-                '<table class="inp-table npp-table"><colgroup><col style="width:7%"><col style="width:36%"><col style="width:12%"><col style="width:20%"><col style="width:25%"></colgroup><thead><tr><th>STT</th><th>TÊN MẶT HÀNG</th><th>Đ.VỊ</th><th>SỐ LƯỢNG</th><th>GHI CHÚ</th></tr></thead><tbody>'+rows+'</tbody></table>'+
+                '<table class="inp-table npp-table"><colgroup><col style="width:7%"><col style="width:36%"><col style="width:12%"><col style="width:20%"><col style="width:25%"></colgroup><thead><tr><th>STT</th><th class="npp-name-head"><span>TÊN MẶT HÀNG</span></th><th>Đ.VỊ</th><th>SỐ LƯỢNG</th><th>GHI CHÚ</th></tr></thead><tbody>'+rows+'</tbody></table>'+
                 '<div class="inp-foot npp-foot">'+signs.map(x=>'<div class="inp-sign"><b>'+esc(x)+'</b><div class="inp-space"></div></div>').join("")+'</div>';
             }
             
@@ -10718,6 +10712,60 @@
             
                     
         </script>
+        <style id="sales-print-balanced-layout">
+            /* Phiếu bán hàng A5 ngang: dãn đều các khối và đặt khung QR sát lề dưới 5mm. */
+            body.in-land:not(.in-a4) #in-overlay #in-paper[data-mode="sales"]:not(.npp-paper){
+              box-sizing:border-box;display:flex;flex-direction:column;justify-content:space-between;
+            }
+            body.in-land:not(.in-a4) #in-overlay #in-paper[data-mode="sales"]:not(.npp-paper) > .inp-head{
+              flex:0 0 auto;margin:0;padding-bottom:6px;
+            }
+            body.in-land:not(.in-a4) #in-overlay #in-paper[data-mode="sales"]:not(.npp-paper) > .inp-cl{
+              flex:0 0 auto;margin:0;padding:6px 9px;gap:2px 14px;
+            }
+            body.in-land:not(.in-a4) #in-overlay #in-paper[data-mode="sales"]:not(.npp-paper) > .inp-table{
+              flex:0 0 auto;margin:0;
+            }
+            body.in-land:not(.in-a4) #in-overlay #in-paper[data-mode="sales"]:not(.npp-paper) > .inp-foot{
+              flex:0 0 auto;margin:0;gap:28px;
+            }
+            body.in-land:not(.in-a4) #in-overlay #in-paper[data-mode="sales"]:not(.npp-paper) .inp-foot .inp-space{
+              height:26px;margin:3px 12px 4px;
+            }
+            body.in-land:not(.in-a4) #in-overlay #in-paper[data-mode="sales"]:not(.npp-paper) > .inp-pay{
+              flex:0 0 auto;margin:0;
+            }
+            /* Cỡ chữ A5 ngang: tăng khoảng 20% để đọc rõ trên bản xem trước và bản in. */
+            body.in-land:not(.in-a4) #in-overlay #in-paper[data-mode="sales"]:not(.npp-paper){
+              font-size:12px;line-height:1.42;
+            }
+            body.in-land:not(.in-a4) #in-overlay #in-paper[data-mode="sales"]:not(.npp-paper) .inp-cty{
+              font-size:11.8px;line-height:1.45;
+            }
+            body.in-land:not(.in-a4) #in-overlay #in-paper[data-mode="sales"]:not(.npp-paper) .inp-cty strong{font-size:14px}
+            body.in-land:not(.in-a4) #in-overlay #in-paper[data-mode="sales"]:not(.npp-paper) .inp-tit h3{font-size:18px}
+            body.in-land:not(.in-a4) #in-overlay #in-paper[data-mode="sales"]:not(.npp-paper) .inp-tit div{font-size:11.8px;line-height:1.45}
+            body.in-land:not(.in-a4) #in-overlay #in-paper[data-mode="sales"]:not(.npp-paper) > .inp-cl,
+            body.in-land:not(.in-a4) #in-overlay #in-paper[data-mode="sales"]:not(.npp-paper) > .inp-cl .inp-lb{font-size:12.2px}
+            body.in-land:not(.in-a4) #in-overlay #in-paper[data-mode="sales"]:not(.npp-paper) .inp-table{font-size:12px}
+            body.in-land:not(.in-a4) #in-overlay #in-paper[data-mode="sales"]:not(.npp-paper) .inp-table thead th{font-size:11px}
+            body.in-land:not(.in-a4) #in-overlay #in-paper[data-mode="sales"]:not(.npp-paper) .inp-table tfoot td{font-size:12px}
+            body.in-land:not(.in-a4) #in-overlay #in-paper[data-mode="sales"]:not(.npp-paper) .inp-table tfoot .inp-sum td{font-size:15.5px}
+            body.in-land:not(.in-a4) #in-overlay #in-paper[data-mode="sales"]:not(.npp-paper) .inp-table tfoot .inp-sum td b{font-size:16px}
+            body.in-land:not(.in-a4) #in-overlay #in-paper[data-mode="sales"]:not(.npp-paper) .inp-table .dim{font-size:11px}
+            body.in-land:not(.in-a4) #in-overlay #in-paper[data-mode="sales"]:not(.npp-paper) .inp-sign b,
+            body.in-land:not(.in-a4) #in-overlay #in-paper[data-mode="sales"]:not(.npp-paper) .inp-sign-name{font-size:12.2px}
+            body.in-land:not(.in-a4) #in-overlay #in-paper[data-mode="sales"]:not(.npp-paper) .inp-sign em{font-size:10.8px}
+            body.in-land:not(.in-a4) #in-overlay #in-paper[data-mode="sales"]:not(.npp-paper) .inp-bank{font-size:11.4px;line-height:1.5}
+            body.in-land:not(.in-a4) #in-overlay #in-paper[data-mode="sales"]:not(.npp-paper) .inp-bank strong{font-size:12.2px}
+            body.in-land:not(.in-a4) #in-overlay #in-paper[data-mode="sales"]:not(.npp-paper) #in-qr-fb{font-size:10.5px}
+            @media print{
+              /* @page đã chừa 5mm: đáy khung QR trùng đáy vùng nội dung 138mm. */
+              body.in-land:not(.in-a4) #in-overlay #in-paper[data-mode="sales"]:not(.npp-paper){
+                min-height:138mm!important;
+              }
+            }
+        </style>
         <script id="lhm-print-ui-js">
             /* =========================================================================
                LÁNG HẠ · GIAO DIỆN IN — phần tương tác
@@ -10889,7 +10937,10 @@
                 buildZoomRow();
                 shortLabels();
                 enhancePaper();
-                if (!keepUserZoom || FIT || !Z) applyZoom(fitScale(), true);
+                var p = paper(), isSales = p && p.dataset.mode === "sales";
+                /* Phiếu bán hàng luôn mở ở 100%; nút Vừa khung vẫn dùng được khi cần. */
+                if (isSales && !keepUserZoom) applyZoom(1, false);
+                else if (!keepUserZoom || FIT || !Z) applyZoom(fitScale(), true);
                 else applyZoom(Z, false);
               }
             
@@ -10913,7 +10964,12 @@
                 wrap("inApDungCauHinhIn", function () {
                   shortLabels();
                   /* đổi khổ/hướng giấy: tính lại tỉ lệ vừa khung cho đúng */
-                  setTimeout(function () { if (ovl() && ovl().classList.contains("on")) applyZoom(fitScale(), true); }, 0);
+                  setTimeout(function () {
+                    if (!ovl() || !ovl().classList.contains("on")) return;
+                    var p = paper();
+                    if (p && p.dataset.mode === "sales") applyZoom(1, false);
+                    else applyZoom(fitScale(), true);
+                  }, 0);
                 });
             
                 // chỉ dựng lại khi lớp in vừa được MỞ (tránh vòng lặp reset zoom)
@@ -11827,6 +11883,8 @@
             body #wb-pv-paper .pv-items tbody tr:nth-child(even)>td,body #wb-pv-paper .pv-items tbody tr:hover>td{background:#fff!important;color:#111!important}
             body #wb-pv-paper .pv-items .c{text-align:center}
             body #wb-pv-paper .pv-items .c input{text-align:center}
+            body #wb-pv-paper .pv-items td.c select{padding:0 16px!important;appearance:none;-webkit-appearance:none;background-color:transparent!important;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%23333' stroke-width='1.5'/%3E%3C/svg%3E")!important;background-repeat:no-repeat!important;background-position:right 3px center!important;background-size:8px 5px!important;text-align:center;text-align-last:center;cursor:pointer}
+            body #wb-pv-paper .pv-items td.c select option{text-align:center}
             body #wb-pv-paper .pv-note-input{width:calc(100% - 25px)}
             body #wb-pv-paper .pv-row-del{float:right;width:22px;height:22px;padding:0;border:0;background:transparent;color:#9b2c2c;font-size:17px;line-height:20px;cursor:pointer}
             body #wb-pv-paper .pv-signs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:15px;min-height:68px;margin-top:23px;font-size:15px;font-weight:700;text-align:center}
@@ -11843,11 +11901,13 @@
             #in-overlay #in-paper.npp-paper .npp-info{grid-template-columns:1fr 1fr;margin:7px 0;padding:6px 9px;gap:2px 16px}
             #in-overlay #in-paper.npp-paper .npp-vehicle{display:inline-block;min-width:110px;padding:2px 7px;border:1px solid #8fa6c4;border-radius:4px;background:#fff;color:#12325c;text-align:center}
             #in-overlay #in-paper.npp-paper .npp-table{table-layout:fixed}
-            #in-overlay #in-paper.npp-paper .npp-foot{position:absolute;left:5mm;right:5mm;bottom:30mm;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;margin:0}
-            #in-overlay #in-paper.npp-paper .npp-foot .inp-sign{text-align:center}
-            #in-overlay #in-paper.npp-paper .npp-foot .inp-space{height:12mm;margin:2px 8px 0}
-            #in-overlay #in-paper.npp-paper .npp-foot .inp-sign:first-child{text-align:left}
-            #in-overlay #in-paper.npp-paper .npp-foot .inp-sign:last-child{text-align:right}
+            #in-overlay #in-paper.npp-paper .npp-table td.npp-name,#in-overlay #in-paper.npp-paper .npp-table td.npp-note{text-align:center!important;vertical-align:middle}
+            #in-overlay #in-paper.npp-paper .npp-table td.npp-name b{display:block;width:82%;margin:0 auto;padding:0 0 0 14px;box-sizing:border-box;text-align:left;white-space:nowrap}
+            #in-overlay #in-paper.npp-paper .npp-table thead th.npp-name-head span{display:block;width:82%;margin:0 auto;padding:0 0 0 14px;box-sizing:border-box;text-align:left;white-space:nowrap}
+            #in-overlay #in-paper.npp-paper .npp-foot{position:absolute;left:10%;right:10%;bottom:30mm;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));align-items:start;gap:18px;margin:0}
+            #in-overlay #in-paper.npp-paper .npp-foot .inp-sign{display:flex;flex-direction:column;align-items:center;width:100%;min-width:0;text-align:center}
+            #in-overlay #in-paper.npp-paper .npp-foot .inp-sign b{display:block;width:100%;text-align:center}
+            #in-overlay #in-paper.npp-paper .npp-foot .inp-space{display:block;width:70%;max-width:150px;min-width:80px;height:12mm;margin:2px auto 0}
             #wb-pv-view .pv-fixed-print{display:inline-flex;align-items:center;min-height:36px;padding:7px 10px;border:1px solid var(--line);border-radius:9px;background:var(--panel3);color:var(--text2);font-size:11px;font-weight:750;white-space:nowrap}
             body #wb-pv-paper select{min-width:0;width:100%;margin:0;padding:0;border:0;border-radius:0;outline:0;background:#fff!important;color:#111!important;box-shadow:none;font:inherit;box-sizing:border-box}
             body #wb-pv-paper select:focus{outline:1px dashed #4b76a0;outline-offset:1px;background:#fff7d6!important}
@@ -11856,7 +11916,7 @@
             body #wb-pv-paper .pv-vehicle-add{flex:0 0 auto;padding:4px 6px;border:1px solid #8fa6c4;border-radius:5px;background:#eef4fc;color:#12325c;font-size:10px;white-space:nowrap;cursor:pointer}
             @media print{
               body.in-npp-print #in-overlay #in-paper.npp-paper{height:138mm!important;min-height:138mm!important;max-height:138mm!important;position:relative!important;overflow:hidden!important}
-              body.in-npp-print #in-overlay #in-paper.npp-paper .npp-foot{left:0!important;right:0!important;bottom:30mm!important}
+              body.in-npp-print #in-overlay #in-paper.npp-paper .npp-foot{left:10%!important;right:10%!important;bottom:30mm!important}
             }
             @media(max-width:640px){
               #wb-pv-view .pv-toolbar{flex-direction:column}
@@ -12308,11 +12368,15 @@
                 if(v.length<5){toast("Biển số xe chưa hợp lệ","bad");return;}pvVehicleList();if(!pvVehicles.includes(v))pvVehicles.push(v);try{localStorage.setItem(PV_VEHICLES_LS,JSON.stringify(pvVehicles));}catch(e){}
                 pvModel.vehicle=v;renderPV();toast("Đã thêm và chọn biển số "+pvVehicleDisplay(v));
               }
-              function pvQtyKind(name){const n=norm(name);return n.includes("pallet")?"pallet":n.split(/[^a-z0-9]+/).includes("van")?"van":"other";}
+              function pvQtyKind(name){const n=norm(name),parts=n.split(/[^a-z0-9]+/);return n.includes("pallet")?"pallet":parts.includes("van")?"van":parts.includes("vo")?"shell":"other";}
               function pvQtyControl(r,i){
                 const kind=pvQtyKind(r.name),common=`data-pv-item="${i}" data-pv-key="qty" aria-label="Số lượng dòng ${i+1}"`;
                 if(kind==="van"){
                   if(!String(r.qty||"").trim())r.qty="4";return `<input type="number" min="4" step="4" inputmode="numeric" ${common} value="${esc(r.qty)}">`;
+                }
+                if(kind==="shell"){
+                  const values=[48,96,144,192];if(String(r.qty||"").trim()&&!values.includes(Number(r.qty)))r.qty="48";const q=String(r.qty||"");
+                  return `<select ${common}><option value="" ${q===""?"selected":""}>—</option>${values.map(v=>`<option value="${v}" ${String(v)===q?"selected":""}>${v}</option>`).join("")}</select>`;
                 }
                 if(kind==="pallet"){
                   const q=Math.min(4,Math.max(1,parseInt(r.qty,10)||1));r.qty=String(q);return `<select ${common}>${[1,2,3,4].map(v=>`<option value="${v}" ${v===q?"selected":""}>${v}</option>`).join("")}</select>`;
@@ -12341,7 +12405,7 @@
                   </div></div><div class="pv-bottom-actions pv-no-print"><button class="btn ghost" type="button" data-pv-add>＋ Thêm dòng hàng</button></div>`;
               }
               function printPV(){
-                if(!pvModel)return;for(const r of pvModel.items){const q=Number(r.qty),kind=pvQtyKind(r.name);if(kind==="van"&&(!Number.isInteger(q)||q<4||q%4)){toast("Số lượng VÁN phải là bội của 4","bad");return;}if(kind==="pallet"&&(!Number.isInteger(q)||q<1||q>4)){toast("Số lượng PALLET phải từ 1 đến 4","bad");return;}}
+                if(!pvModel)return;for(const r of pvModel.items){const q=Number(r.qty),kind=pvQtyKind(r.name);if(kind==="van"&&(!Number.isInteger(q)||q<4||q%4)){toast("Số lượng VÁN phải là bội của 4","bad");return;}if(kind==="shell"&&String(r.qty||"").trim()&&![48,96,144,192].includes(q)){toast("Số lượng vỏ chỉ được chọn 48, 96, 144 hoặc 192","bad");return;}if(kind==="pallet"&&(!Number.isInteger(q)||q<1||q>4)){toast("Số lượng PALLET phải từ 1 đến 4","bad");return;}}
                 if(typeof inPhieuNPP!=="function"){toast("Khung in chưa sẵn sàng","bad");return;}inPhieuNPP(Object.assign({},pvModel,{vehicle:pvVehicleDisplay(pvModel.vehicle)}));
               }
               function render(){
@@ -12623,7 +12687,7 @@
         </script>
 
         <script>
-            (function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a501c937d9c3038b',t:'MTc5MjkzNzIzMA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();
+            (function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a5024226c87e0df8',t:'MTc5Mjk0MjE4Mw=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();
         </script>
     </body>
 
