@@ -12527,6 +12527,7 @@
               "use strict";
               if(window.LH_CSV_SYNC)return;
               const DB_NAME="langha_csv_workbook_v1",DB_VER=1,ORIGINAL_PREFIX="original:";
+              const MAX_CSV_FILE_BYTES=100*1024*1024,MAX_CSV_BATCH_BYTES=100*1024*1024;
               const CSV_NAMES=["TT Chung","Thong Tin DV","N-CS1","Kho-CS1","CN Vo-CS1","In Phieu","Thu Chi-CS1","Sổ Qũy 2","TT Hóa Đơn","CN A Binh va 199MK","Chị Thanh","Hóa Đơn Công Nợ","PHIEU NPP"];
               const ORIGINAL_NAMES=["Bang Luong","CN Tien-CS1","CN Tiền-CS2","CN Vo-CS1","CN Vỏ-CS2","Chấm công","DM KH","HocExcel.Online","Hóa Đơn Công Nợ","In Phieu","Kho-CS1","Kho-CS2","LangHa T 9 - 2026 (1)","Lợi Nhuận","Mua-Đổi-Vỏ","N-CS1","N-CS2","Send Email","Sheet1","Sheet2","Sheet4","Sổ Qũy 2","TT Chung","TT Hóa Đơn","Thong Tin DV","Thu Chi-CS1","Thu Chi-CS2","Tổng Hợp HH","X-CS1","X-CS2","bank","danh sach khach hang"];
               const TARGETS=CSV_NAMES.map(name=>({key:name,n:name+" [CSV]",label:name,csv:true})).concat(ORIGINAL_NAMES.map(name=>({key:ORIGINAL_PREFIX+name,n:name,label:name,csv:false})));
@@ -12664,20 +12665,32 @@
                 if(cell!==""||row.length){row.push(cell);rows.push(row);}
                 const out=csvResult(rows);out.delimiter=d;return out;
               }
+              // Cắt trực tiếp từ chuỗi đã giải mã thay vì nối từng ký tự: file lớn tránh tạo hàng triệu chuỗi tạm.
               async function parseCsvAsync(text,onProgress){
                 if(text.charCodeAt(0)===0xFEFF)text=text.slice(1);
-                const d=delimiter(text),rows=[];let row=[],cell="",q=false;
-                for(let i=0;i<text.length;i++){
+                const d=delimiter(text),rows=[];let row=[],q=false,start=0,parts=null,partLength=0,nextYield=262144;
+                const addPart=end=>{const v=text.slice(start,end);if(!parts)parts=[];parts.push(v);partLength+=v.length;};
+                const addCell=end=>{const tail=text.slice(start,end);let value;if(parts){parts.push(tail);value=parts.join("");}else value=tail;row.push(value);parts=null;partLength=0;};
+                let i=0;
+                for(;i<text.length;i++){
                   const c=text[i];
-                  if(q){if(c==='"'){if(text[i+1]==='"'){cell+='"';i++;}else q=false;}else cell+=c;}
-                  else if(c==='"'&&cell==="")q=true;
-                  else if(c===d){row.push(cell);cell="";}
-                  else if(c==='\n'||c==='\r'){if(c==='\r'&&text[i+1]==='\n')i++;row.push(cell);rows.push(row);row=[];cell="";}
-                  else cell+=c;
-                  if(i&&i%250000===0){if(onProgress)onProgress(i/Math.max(1,text.length));await yieldUi();}
+                  if(q){
+                    if(c==='"'){
+                      addPart(i);
+                      if(text[i+1]==='"'){parts.push('"');partLength++;i++;start=i+1;}
+                      else{q=false;start=i+1;}
+                    }
+                  }else if(c==='"'&&partLength+i-start===0){q=true;start=i+1;}
+                  else if(c===d){addCell(i);start=i+1;}
+                  else if(c==='\n'||c==='\r'){
+                    addCell(i);rows.push(row);row=[];
+                    if(c==='\r'&&text[i+1]==='\n')i++;
+                    start=i+1;
+                  }
+                  if(i>=nextYield){nextYield=i+262144;if(onProgress)onProgress(i/Math.max(1,text.length));await yieldUi();}
                 }
                 if(q)throw new Error("CSV có dấu ngoặc kép chưa đóng; hãy lưu lại file trước khi tải.");
-                if(cell!==""||row.length){row.push(cell);rows.push(row);}
+                if(partLength+i-start>0||row.length){addCell(i);rows.push(row);}
                 const out=csvResult(rows);out.delimiter=d;if(onProgress)onProgress(1);return out;
               }
               async function hashBuffer(buf){if(window.crypto&&crypto.subtle){const h=await crypto.subtle.digest("SHA-256",buf);return Array.from(new Uint8Array(h)).map(x=>x.toString(16).padStart(2,"0")).join("");}const b=new Uint8Array(buf);let h=2166136261;for(let i=0;i<b.length;i++){h^=b[i];h=Math.imul(h,16777619);}return"fnv-"+(h>>>0).toString(16);}
@@ -12738,14 +12751,18 @@
               function updateApply(){const btn=$("lh-csv-sync-apply");if(btn)btn.disabled=busy||!!validation()||!items.length||(needsConfirm()&&!replaceApproved);const undo=$("lh-csv-sync-undo");if(undo)undo.disabled=busy||!undoAvailable;}
               async function handleFiles(files){
                 if(busy)return;const list=Array.from(files||[]);if(!list.length)return;
-                if(list.length>45){statusText("Chỉ chọn tối đa 45 file mỗi lần.",true);return;}
-                if(list.reduce((n,f)=>n+f.size,0)>100*1024*1024){statusText("Tổng file CSV lớn hơn 100 MB; hãy chia thành nhiều lần nhập.",true);return;}
-                if(list.some(f=>!/\.csv$/i.test(f.name))){statusText("Chỉ nhận file .csv. TXT macro chỉ dùng tham chiếu, không tải lên như dữ liệu.",true);return;}
-                busy=true;items=[];replaceApproved=false;renderPreview();updateApply();
+                // Lần chọn không hợp lệ không được để lại tệp cũ đã duyệt trong hàng đợi ghi.
+                function rejectSelection(message){items=[];replaceApproved=false;renderPreview();statusText(message,true);updateApply();}
+                if(list.length>45){rejectSelection("Chỉ chọn tối đa 45 file mỗi lần.");return;}
+                const tooLarge=list.find(f=>f.size>MAX_CSV_FILE_BYTES);
+                if(tooLarge){rejectSelection("Không đọc được CSV: "+tooLarge.name+" lớn hơn 100 MB; hãy chia nhỏ file.");return;}
+                if(list.reduce((n,f)=>n+f.size,0)>MAX_CSV_BATCH_BYTES){rejectSelection("Tổng file CSV lớn hơn 100 MB; hãy chia thành nhiều lần nhập.");return;}
+                if(list.some(f=>!/\.csv$/i.test(f.name))){rejectSelection("Chỉ nhận file .csv. TXT macro chỉ dùng tham chiếu, không tải lên như dữ liệu.");return;}
+                busy=true;items=[];replaceApproved=false;renderPreview();statusText("");updateApply();
                 try{
                   if(window.workbookWeb)await workbookWeb.ensureData();
                   for(let i=0;i<list.length;i++){
-                    const f=list[i];if(f.size>50*1024*1024)throw new Error(f.name+" lớn hơn 50 MB; hãy chia nhỏ file.");
+                    const f=list[i];
                     progress("Đang đọc "+f.name+" ("+(i+1)+"/"+list.length+")…",15+60*i/list.length);await yieldUi();
                     const buf=await f.arrayBuffer(),hash=await hashBuffer(buf),parsed=await parseCsvAsync(decodeBuffer(buf),part=>progress("Đang tách "+f.name+" · "+Math.round(part*100)+"%",15+60*(i+part)/list.length));
                     if(!parsed.nonEmptyCells)throw new Error(f.name+" không có ô dữ liệu.");
@@ -12830,7 +12847,7 @@
                 const modal=document.createElement("div");modal.id="lh-csv-sync-modal";modal.className="lh-csv-sync-modal";modal.hidden=true;
                 modal.innerHTML='<div class="lh-csv-sync-box" role="dialog" aria-modal="true" aria-labelledby="lh-csv-sync-title">'+
                   '<div class="lh-csv-sync-head"><div><h3 id="lh-csv-sync-title">Nhập file CSV</h3><p>Chọn sheet đích · xem trước · sao lưu và hoàn tác</p></div><button type="button" class="btn ghost" id="lh-csv-sync-close" aria-label="Đóng">✕</button></div>'+
-                  '<div class="lh-csv-sync-note">Chọn một hoặc nhiều CSV. File đúng tên tự nhận sheet; file tên khác cần chọn sheet đích. <b>Mỗi sheet đích được thay toàn bộ</b>, có sao lưu/hoàn tác. Chỉ lưu trên trình duyệt máy này, không sửa file gốc hoặc tự đẩy lên Firebase. Nhập X-CS1 cập nhật sổ bán hàng; các sheet khác cập nhật bảng dữ liệu tương ứng, không tự thay danh mục khách hàng/nhân sự.</div>'+
+                  '<div class="lh-csv-sync-note">Nhận CSV tối đa <b>100 MB/file</b> (tổng mỗi lần tối đa 100 MB). Mỗi file ứng với một sheet; nếu file gộp nhiều sheet, hãy tách từng sheet. File đúng tên tự nhận sheet; file tên khác cần chọn sheet đích. <b>Mỗi sheet đích được thay toàn bộ</b>, có sao lưu/hoàn tác. Chỉ lưu trên trình duyệt máy này, không sửa file gốc hoặc tự đẩy lên Firebase. Nhập X-CS1 cập nhật sổ bán hàng; các sheet khác cập nhật bảng dữ liệu tương ứng, không tự thay danh mục khách hàng/nhân sự. File lớn cần thêm thời gian và bộ nhớ trình duyệt.</div>'+
                   '<div class="tools"><button type="button" class="btn" id="lh-csv-sync-pick">⬆ Chọn file CSV</button><button type="button" class="btn ghost" id="lh-csv-sync-undo" disabled>↶ Hoàn tác lần ghi</button><button type="button" class="btn ghost" id="lh-csv-sync-reset">↩ Khôi phục dữ liệu gốc</button></div>'+
                   '<input id="lh-csv-sync-input" type="file" accept=".csv,text/csv" multiple hidden>'+
                   '<div id="lh-csv-sync-saved" class="hint"></div><div id="lh-csv-sync-preview"></div><div id="lh-csv-sync-danger" class="lh-csv-sync-danger" hidden></div>'+
@@ -12848,7 +12865,7 @@
               function open(){if(window.LH_ADMIN_GATE&&!LH_ADMIN_GATE.isUnlocked()){LH_ADMIN_GATE.unlock(open);return;}build();renderStatus();statusText("");progress("");$("lh-csv-sync-modal").hidden=false;document.body.classList.add("lh-csv-sync-on");updateApply();}
               function close(){if(busy)return;$("lh-csv-sync-modal").hidden=true;document.body.classList.remove("lh-csv-sync-on");}
               if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",installEntry);else installEntry();
-              window.LH_CSV_SYNC={ready:openDb,applyStored,open,close,handleFiles,apply,importExcelSales,clear:clearStored,undo,getState:async()=>{const records=await allSheets();return{count:records.length,originalCount:records.filter(r=>!r.csv).length,lastImport:await meta("lastImport"),backup:await meta("backup")};},_parse:parseCsv,_items:()=>items,_targets:()=>TARGETS.slice()};
+              window.LH_CSV_SYNC={ready:openDb,applyStored,open,close,handleFiles,apply,importExcelSales,clear:clearStored,undo,getState:async()=>{const records=await allSheets();return{count:records.length,originalCount:records.filter(r=>!r.csv).length,lastImport:await meta("lastImport"),backup:await meta("backup")};},_parse:parseCsv,_parseAsync:parseCsvAsync,_items:()=>items,_targets:()=>TARGETS.slice()};
               // Khôi phục sổ đã nhập ngay khi mở trang, kể cả khi chưa mở giao diện workbook.
               async function restoreSaleAtStartup(){
                 try{const saved=(await allSheets()).find(r=>r.n==="X-CS1");if(!saved)return;const rows=await saleRowsFromSheet(saved);if(rows.length)replaceSaleRows(rows);}
@@ -14463,19 +14480,44 @@
                 ];
                 const esc=v=>String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
                 function action(id,label,sub,ic){return '<button type="button" class="lh-side-action" data-side-action="'+id+'">'+icon[ic]+'<span><strong>'+esc(label)+'</strong>'+(sub?'<small>'+esc(sub)+'</small>':'')+'</span></button>';}
-                const html=groups.map(g=>'<div class="lh-side-section"><button type="button" class="lh-side-group" data-side-group="'+g.id+'" aria-expanded="false" aria-controls="lh-side-'+g.id+'">'+icon[g.ic]+'<span>'+esc(g.label)+'</span><span class="lh-arrow">'+icon.down+'</span></button>'+
-                  '<div class="lh-side-children" id="lh-side-'+g.id+'" hidden>'+g.items.map(it=>'<button type="button" class="lh-side-leaf" '+(it.ov?'data-side-ov="'+it.ov+'"':it.action?'data-side-action="'+it.action+'"':'data-side-tab="'+it.tab+'"')+'>'+esc(it.label)+'</button>').join('')+'</div></div>').join('');
+                const html=groups.map(g=>'<div class="lh-side-section"><button type="button" class="lh-side-group" data-side-group="'+g.id+'" aria-haspopup="true" aria-expanded="false" aria-controls="lh-side-'+g.id+'">'+icon[g.ic]+'<span>'+esc(g.label)+'</span><span class="lh-arrow">'+icon.down+'</span></button>'+
+                  '<div class="lh-side-children" id="lh-side-'+g.id+'" hidden><button type="button" class="lh-side-tree-back" data-side-back="'+g.id+'" aria-label="Trở lại các nhóm">‹ Các nhóm</button>'+g.items.map(it=>'<button type="button" class="lh-side-leaf" '+(it.ov?'data-side-ov="'+it.ov+'"':it.action?'data-side-action="'+it.action+'"':'data-side-tab="'+it.tab+'"')+'>'+esc(it.label)+'</button>').join('')+'</div></div>').join('');
                 const side=document.createElement('aside');side.id='lh-side';side.setAttribute('aria-label','Menu chức năng');
                 side.innerHTML='<div class="lh-side-brand"><span class="lh-side-logo">LH</span><span><strong>LÁNG HẠ</strong><small>Quản lý bán hàng</small></span></div>'+
-                  '<div class="lh-side-main"><div class="lh-side-caption">Điều hướng</div><button type="button" id="lh-side-toggle" aria-expanded="false" aria-controls="lh-side-menu">'+icon.menu+'<span>Danh mục chức năng</span><span class="lh-arrow">'+icon.down+'</span></button>'+
-                  '<div id="lh-side-menu" hidden>'+html+'<div class="lh-side-mobile-actions">'+action('csv','Nhập file CSV','Xem trước & hoàn tác','upload')+action('excel','Nhập file Excel','','book')+action('order','Đặt đơn hàng','','plus')+action('settings','Cài đặt & dữ liệu','','gear')+'</div></div>'+
+                  '<div class="lh-side-main"><div class="lh-side-caption">Điều hướng</div><div class="lh-side-tree-root"><button type="button" id="lh-side-toggle" aria-haspopup="true" aria-expanded="false" aria-controls="lh-side-menu">'+icon.menu+'<span>Danh mục chức năng</span><span class="lh-arrow">'+icon.down+'</span></button>'+
+                  '<div id="lh-side-menu" hidden>'+html+'<div class="lh-side-mobile-actions">'+action('csv','Nhập file CSV','Xem trước & hoàn tác','upload')+action('excel','Nhập file Excel','','book')+action('order','Đặt đơn hàng','','plus')+action('settings','Cài đặt & dữ liệu','','gear')+'</div></div></div>'+
                   '<div id="lh-side-csv-wrap">'+action('csv','Nhập file CSV','Xem trước & hoàn tác','upload').replace('class="lh-side-action"','id="lh-side-csv" class="lh-side-action"')+'</div></div>'+
                   '<div class="lh-side-bottom"><div class="lh-side-current">ĐANG XEM<strong id="lh-side-current">Bán hàng CS1</strong></div>'+action('order','Đặt đơn hàng','','plus')+action('settings','Cài đặt & dữ liệu','','gear')+'</div>';
                 document.body.appendChild(side);
                 const toggle=document.getElementById('lh-side-toggle'),menu=document.getElementById('lh-side-menu');
-                function expand(on){menu.hidden=!on;toggle.setAttribute('aria-expanded',String(on));}
-                toggle.addEventListener('click',()=>expand(menu.hidden));
+                const treeRoot=side.querySelector('.lh-side-tree-root');let closeTimer=0,lastPointerType='';
+                side.addEventListener('pointerdown',e=>{lastPointerType=e.pointerType||'';},true);
                 function setGroup(id,on){const b=side.querySelector('[data-side-group="'+id+'"]'),panel=document.getElementById('lh-side-'+id);if(b&&panel){b.setAttribute('aria-expanded',String(on));panel.hidden=!on;}}
+                function onlyGroup(id,on){groups.forEach(g=>setGroup(g.id,g.id===id&&on));}
+                function expand(on){menu.hidden=!on;toggle.setAttribute('aria-expanded',String(on));if(!on)onlyGroup('',false);}
+                function hoverPointer(e){return (e.pointerType==='mouse'||e.pointerType==='pen')&&window.matchMedia('(hover:hover)').matches;}
+                // Chuột rê mở nhánh ngay bên phải; bấm/Enter vẫn hoạt động cho màn hình cảm ứng và bàn phím.
+                toggle.addEventListener('pointerenter',e=>{if(hoverPointer(e)&&document.body.classList.contains('lh-side-open')){clearTimeout(closeTimer);expand(true);}});
+                toggle.addEventListener('click',e=>{
+                  if(e.detail>0&&lastPointerType==='mouse'&&window.matchMedia('(hover:hover)').matches)expand(true);
+                  else expand(menu.hidden);
+                });
+                side.querySelectorAll('[data-side-group]').forEach(b=>b.addEventListener('pointerenter',e=>{
+                  if(hoverPointer(e)&&!menu.hidden){clearTimeout(closeTimer);onlyGroup(b.dataset.sideGroup,true);}
+                }));
+                treeRoot.addEventListener('pointerenter',()=>clearTimeout(closeTimer));
+                treeRoot.addEventListener('pointerleave',e=>{
+                  if(!hoverPointer(e))return;clearTimeout(closeTimer);
+                  closeTimer=setTimeout(()=>{const a=document.activeElement;if(a&&treeRoot.contains(a)&&a.matches(':focus-visible'))return;expand(false);},260);
+                });
+                document.addEventListener('pointerdown',e=>{if(!treeRoot.contains(e.target)&&!menu.hidden)expand(false);});
+                side.addEventListener('keydown',e=>{
+                  const group=e.target.closest('[data-side-group]'),child=e.target.closest('.lh-side-children');
+                  if(e.key==='ArrowRight'&&e.target===toggle){e.preventDefault();expand(true);const first=menu.querySelector('[data-side-group]');if(first)first.focus();}
+                  else if(e.key==='ArrowRight'&&group){e.preventDefault();onlyGroup(group.dataset.sideGroup,true);const first=document.getElementById('lh-side-'+group.dataset.sideGroup).querySelector('.lh-side-leaf');if(first)first.focus();}
+                  else if(e.key==='ArrowLeft'&&child){e.preventDefault();const id=child.id.replace(/^lh-side-/,'');setGroup(id,false);const b=side.querySelector('[data-side-group="'+id+'"]');if(b)b.focus();}
+                  else if(e.key==='ArrowLeft'&&group){e.preventDefault();expand(false);toggle.focus();}
+                });
                 function compact(){return document.body.classList.contains('lhm-mode')||window.matchMedia('(max-width:920px)').matches;}
                 function chooseAction(action){
                   if(compact())expand(false);
@@ -14493,8 +14535,9 @@
                   }
                 }
                 side.addEventListener('click',function(e){
+                  const back=e.target.closest('[data-side-back]');if(back){setGroup(back.dataset.sideBack,false);if(e.detail===0){const b=side.querySelector('[data-side-group="'+back.dataset.sideBack+'"]');if(b)b.focus();}return;}
                   const action=e.target.closest('[data-side-action]');if(action){chooseAction(action.dataset.sideAction);return;}
-                  const group=e.target.closest('[data-side-group]');if(group){const id=group.dataset.sideGroup,on=group.getAttribute('aria-expanded')!=='true';groups.forEach(g=>setGroup(g.id,g.id===id&&on));return;}
+                  const group=e.target.closest('[data-side-group]');if(group){const id=group.dataset.sideGroup,mouse=e.detail>0&&lastPointerType==='mouse'&&window.matchMedia('(hover:hover)').matches;onlyGroup(id,mouse||group.getAttribute('aria-expanded')!=='true');return;}
                   const leaf=e.target.closest('[data-side-ov],[data-side-tab]');if(!leaf)return;
                   if(leaf.dataset.sideOv){
                     if(typeof window.goTab==='function')window.goTab('dash');
@@ -14574,6 +14617,11 @@
                 function setOpen(on){
                   const active=document.activeElement;
                   document.body.classList.toggle('lh-side-open',on);
+                  if(!on){
+                    const menu=side.querySelector('#lh-side-menu'),toggle=side.querySelector('#lh-side-toggle');
+                    if(menu)menu.hidden=true;if(toggle)toggle.setAttribute('aria-expanded','false');
+                    side.querySelectorAll('[data-side-group]').forEach(b=>{b.setAttribute('aria-expanded','false');const panel=document.getElementById(b.getAttribute('aria-controls'));if(panel)panel.hidden=true;});
+                  }
                   handle.setAttribute('aria-expanded',String(on));
                   handle.setAttribute('aria-label',on?'Thu gọn thanh chức năng':'Mở thanh chức năng');
                   handle.title=on?'Thu gọn thanh chức năng':'Mở thanh chức năng';
@@ -14596,8 +14644,58 @@
             })();
         </script>
 
+        <style id="lh-tree-flyout-v4-css">
+            @media screen {
+              /* Bảng nhánh nằm ngoài cạnh phải; tránh để khung cuộn của thanh bên cắt mất menu. */
+              body #lh-side .lh-side-main{overflow:visible!important}
+              #lh-side .lh-side-tree-root{position:relative}
+              body #lh-side #lh-side-menu{
+                position:absolute!important;z-index:12;left:calc(100% + 12px)!important;right:auto!important;top:0!important;bottom:auto!important;
+                width:226px!important;max-height:none!important;overflow:visible!important;padding:6px!important;
+                border:1px solid #5879a4!important;border-radius:11px!important;background:#172e4c!important;
+                box-shadow:0 12px 30px rgba(4,13,27,.42)!important;
+              }
+              /* Cầu nối vô hình cho con trỏ đi từ nút sang nhánh, không tự đóng giữa đường. */
+              body #lh-side #lh-side-menu::before{content:"";position:absolute;left:-13px;top:0;width:13px;height:49px}
+              #lh-side .lh-side-section{position:relative}
+              body #lh-side .lh-side-children{
+                position:absolute;z-index:13;left:100%;right:auto;top:0;bottom:auto;width:238px;
+                margin:0!important;padding:6px!important;border:1px solid #5879a4!important;border-radius:11px;
+                background:#172e4c;box-shadow:0 12px 30px rgba(4,13,27,.42);
+                max-height:min(500px,calc(100vh - 125px));overflow-y:auto;
+              }
+              #lh-side .lh-side-group{min-height:43px;line-height:1.25}
+              #lh-side .lh-side-leaf{min-height:40px;padding:9px 10px;font-size:12.5px}
+              #lh-side-toggle .lh-arrow,#lh-side-toggle[aria-expanded="true"] .lh-arrow,
+              #lh-side .lh-side-group .lh-arrow,#lh-side .lh-side-group[aria-expanded="true"] .lh-arrow{transform:rotate(-90deg)!important}
+              #lh-side .lh-side-tree-back{display:none}
+              /* Khi mở bảng, dời tay nắm lên phía trên để không che nhánh menu. */
+              body.lh-side-open #lh-side-handle{top:24px!important;left:auto;right:0;z-index:20;border-left:1px solid #7898c2;border-right:0;border-radius:10px 0 0 10px}
+            }
+            @media screen and (max-width:760px){
+              /* Màn hình hẹp: hai cấp hiển thị trong cùng vùng bên phải; nút quay lại thay cho hover. */
+              body #lh-side{width:min(200px,52vw)!important}
+              body #lh-side #lh-side-toggle>span:not(.lh-arrow){white-space:normal;line-height:1.2}
+              body #lh-side #lh-side-menu{width:calc(100vw - min(200px,52vw) - 8px)!important}
+              #lh-side .lh-side-section{position:static}
+              body #lh-side .lh-side-children{
+                left:0;right:0;top:0;bottom:auto;width:auto;min-height:100%;
+                max-height:calc(100vh - 130px);max-height:calc(100dvh - 130px);overflow-y:auto;
+                animation:lh-tree-in .16s ease-out;
+              }
+              #lh-side .lh-side-tree-back{
+                display:flex;width:100%;align-items:center;gap:6px;min-height:39px;padding:8px 9px;
+                border:0;border-bottom:1px solid rgba(188,213,246,.24);border-radius:6px 6px 0 0;
+                background:transparent;color:#b8d4fa;font-weight:750;text-align:left;
+              }
+              #lh-side .lh-side-tree-back:hover{background:rgba(151,184,231,.13)}
+            }
+            @keyframes lh-tree-in{from{transform:translateX(10px)}to{transform:translateX(0)}}
+            @media (prefers-reduced-motion:reduce){#lh-side .lh-side-children{animation:none!important}}
+        </style>
+
         <script>
-            (function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a512c0051865e8d4',t:'MTc5MzExNTExMQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();
+            (function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a512da166f3908d9',t:'MTc5MzExNjE3OA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();
         </script>
     </body>
 
